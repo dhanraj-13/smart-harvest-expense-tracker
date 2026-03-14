@@ -1,0 +1,198 @@
+Design a high-fidelity, modern, responsive web app UI in Figma for a product called "Smart Harvest".
+
+About the product:
+Smart Harvest is an agriculture intelligence platform for Tamil Nadu farmers, farm owners, and agri advisors. It helps users predict crop yield, cultivation cost, revenue, and profit using machine learning, then manage farm operations through expenses, budgets, fields, users, alerts, reports, and AI explanations.
+
+Goal:
+Create a premium, trustworthy, agriculture-first UI system and complete web experience that feels local, practical, and intelligent. Avoid generic SaaS styling. The product should feel like a real farm decision-support platform.
+
+Visual direction:
+- Mood: grounded, premium, calm, data-rich, trustworthy
+- Inspiration: Tamil Nadu agriculture, paddy fields, soil, sunlight, crop planning maps, seasonal cycles
+- Avoid: purple startup aesthetics, overly futuristic neon dashboards, overly corporate finance UI
+- Use strong visual hierarchy, large readable numbers, soft depth, subtle texture, and meaningful chart emphasis
+
+Color palette:
+- Primary green: #2F6B3B
+- Deep leaf: #1F4D2A
+- Paddy green: #7BAE58
+- Turmeric accent: #D9A441
+- Terracotta accent: #B85C38
+- Wet soil brown: #6B4F3A
+- Background warm: #F7F3EA
+- Surface: #FFFDF8
+- Text dark: #1F2933
+- Muted text: #667085
+- Border: #D9D2C3
+
+Typography:
+- Heading font: Lora or Playfair Display
+- Body/UI font: Work Sans or Manrope
+- Headings should feel elegant and editorial
+- Body text should feel clear, modern, and highly readable
+
+Design system requirements:
+Create a reusable component system with:
+- top navigation
+- dashboard sidebar
+- hero sections
+- KPI stat cards
+- chart cards
+- prediction summary cards
+- multi-step forms
+- select dropdowns
+- inputs and date pickers
+- segmented controls
+- tabs
+- badges
+- alerts
+- tables
+- activity cards
+- empty states
+- toast or success feedback
+- modal/dialog patterns
+- mobile bottom sheet pattern if needed
+
+Layout requirements:
+- Use Auto Layout throughout
+- Design desktop first and also provide mobile-responsive versions
+- Create a 12-column desktop grid and a 4-column mobile grid
+- Use clear spacing rhythm and clean alignment
+- Rounded corners should feel refined, not overly soft
+- Use cards and panels for dense information, but keep them breathable
+
+Target users:
+- Farmers with varying digital literacy
+- Farm managers tracking budgets and costs
+- Advisors reviewing crop performance and recommendations
+
+Important UX principles:
+- Keep forms simple and step-based
+- Make data visual and understandable at a glance
+- Support trust with explanation panels, confidence indicators, and disclaimers
+- Show INR currency clearly
+- Show units like tons, hectare, acre clearly
+- Include English-first UI with room for Tamil / Thanglish toggle
+- Mobile usability is very important
+
+Design these main screens:
+
+1. Landing Page
+- Large hero with field-inspired background
+- Headline about smart crop planning and profit prediction
+- Supporting text explaining ML-driven predictions for farmers
+- Primary CTA: Start Prediction
+- Secondary CTA: Learn More
+- Trust stats: districts, crops, seasons, model confidence
+- Feature cards: yield prediction, expense prediction, AI explanation, farm management
+- “How it works” 3-step section
+- Testimonial or proof section
+- Footer with product trust language
+
+2. Prediction Workspace
+- Clean multi-step layout
+- Step 1: crop details
+  farmer ID, district, crop, season, area, sowing date, harvest date, selling price per ton, explanation language
+- Step 2: expense entry
+  seed, fertilizer, pesticide, labor, machine, water, fuel/electricity, transport, storage, misc
+- Step 3: review and predict
+  total entered expense, selected crop/district/season summary, primary predict button
+- Design the page to reduce overwhelm and make it easy to complete
+
+3. Prediction Results
+- KPI cards for:
+  predicted total cost
+  predicted revenue
+  predicted profit
+  predicted yield
+- confidence score card with progress indicator
+- expense breakdown chart
+- AI explanation card
+- crop, season, district, area summary badges
+- profit state should visually distinguish positive vs negative outcome
+
+4. History and Comparison Page
+- list of previous predictions
+- expandable cards with timestamp and quick summary
+- trend chart for profit over time
+- compare two predictions side by side
+- filters and empty state
+
+5. Farm Management Dashboard
+- summary cards:
+  total expenses, remaining budget, estimated profit, predicted yield, cost per acre
+- monthly expense trend chart
+- expense category pie/donut chart
+- recent expenses table/list
+- budget alerts panel
+- visual emphasis on risk and overspending
+
+6. Management Modules
+Create dashboard subpages or panels for:
+- Expenses
+- Budgets
+- Fields
+- Users
+- Alerts
+- Reports
+
+Expenses page:
+- table/list view
+- filters by date, crop, category, field
+- add/edit expense modal
+- quick add CTA
+
+Budgets page:
+- monthly budget cards
+- category-wise budget summary
+- usage progress bars
+- over-budget warning styling
+
+Fields page:
+- field cards or table
+- field name, crop type, season, district, area, soil type, GPS
+- add/edit field interaction
+
+Users page:
+- simple team management table
+- role badge, active state, phone number
+
+Alerts page:
+- severity-based alert cards
+- helpful, not alarming
+- categories and usage ratio if relevant
+
+Reports page:
+- report cards for expense, profit, crop production
+- export actions
+- chart previews
+
+7. About / Trust Page
+- mission
+- technology overview
+- ML-based prediction explanation
+- AI explanation support
+- disclaimer that predictions are advisory, not guarantees
+- data coverage section
+
+Extra features to visualize:
+- voice expense parsing card or widget
+- language toggle: English / Tamil / Thanglish
+- dark-on-light design preferred
+- subtle agricultural illustrations, map contours, crop icons, or terrain-inspired shapes
+
+Interaction style:
+- soft hover states
+- subtle panel elevation
+- elegant transitions
+- meaningful focus states
+- not flashy
+
+Deliverables:
+- full desktop frames
+- key mobile frames
+- reusable design system page
+- component variants for buttons, cards, badges, alerts, form fields, tables, tabs, and charts
+
+Overall outcome:
+The final Figma design should feel like a serious, modern agricultural intelligence platform for Tamil Nadu, combining machine learning, farm finance, and operational management in one polished interface.

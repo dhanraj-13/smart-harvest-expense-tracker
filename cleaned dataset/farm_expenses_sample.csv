@@ -1,0 +1,20 @@
+date,category,amount,field_name,crop_type,notes,receipt_photo,created_by
+2026-01-12,Seeds,9000,North Field,Rice,Nursery seed purchase,receipts/2026-01-12-seeds-north.jpg,Dhanraj
+2026-01-18,Equipment,7000,Coconut Grove,Coconut,Water pump maintenance,receipts/2026-01-18-equipment-coconut.jpg,Meena
+2026-01-25,Transport,2400,River Plot,Groundnut,Mini truck to input store,receipts/2026-01-25-transport-river.jpg,Ravi
+2026-02-02,Labor,8000,North Field,Rice,Land preparation workers,receipts/2026-02-02-labor-north.jpg,Dhanraj
+2026-02-14,Fertilizer,6500,Coconut Grove,Coconut,Organic manure application,receipts/2026-02-14-fertilizer-coconut.jpg,Meena
+2026-02-20,Water,3200,River Plot,Groundnut,Borewell electricity charge,receipts/2026-02-20-water-river.jpg,Ravi
+2026-02-24,Fuel,1900,North Field,Rice,Tiller diesel refill,receipts/2026-02-24-fuel-north.jpg,Dhanraj
+2026-02-27,Pesticides,3000,Coconut Grove,Coconut,Rhinoceros beetle control,receipts/2026-02-27-pesticides-coconut.jpg,Meena
+2026-03-01,Labor,12000,North Field,Rice,Transplanting crew payment,receipts/2026-03-01-labor-north.jpg,Dhanraj
+2026-03-03,Fertilizer,8500,North Field,Rice,Urea top dressing,receipts/2026-03-03-fertilizer-north.jpg,Dhanraj
+2026-03-04,Water,5000,North Field,Rice,Canal pumping support,receipts/2026-03-04-water-north.jpg,Dhanraj
+2026-03-05,Fuel,2800,North Field,Rice,Tractor diesel,receipts/2026-03-05-fuel-north.jpg,Meena
+2026-03-06,Labor,9500,River Plot,Groundnut,Weeding team payment,receipts/2026-03-06-labor-river.jpg,Ravi
+2026-03-07,Seeds,6000,River Plot,Groundnut,Gap filling seed purchase,receipts/2026-03-07-seeds-river.jpg,Ravi
+2026-03-08,Pesticides,4200,River Plot,Groundnut,Sucking pest spray,receipts/2026-03-08-pesticides-river.jpg,Meena
+2026-03-09,Labor,11500,Coconut Grove,Coconut,Harvest labor advance,receipts/2026-03-09-labor-coconut.jpg,Dhanraj
+2026-03-09,Transport,3500,Coconut Grove,Coconut,Market loading and transport,receipts/2026-03-09-transport-coconut.jpg,Ravi
+2026-03-10,Equipment,6500,North Field,Rice,Rotavator service,receipts/2026-03-10-equipment-north.jpg,Meena
+2026-03-11,Water,4700,Coconut Grove,Coconut,Drip line repair and water charge,receipts/2026-03-11-water-coconut.jpg,Meena

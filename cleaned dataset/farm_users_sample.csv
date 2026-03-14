@@ -1,0 +1,4 @@
+name,role,phone,is_active
+Dhanraj,Admin,+91 9876543210,true
+Meena,Editor,+91 9876500001,true
+Ravi,Viewer,+91 9876500002,true
