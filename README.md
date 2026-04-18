@@ -1,7 +1,8 @@
-# Smart Harvest Tracking System
+# 🌾 Smart Harvest Tracking System
 
-Smart Harvest is a full-stack demo project for **farm management + ML predictions**.
+Smart Harvest is a full-stack web application for **farm expense tracking + crop profit prediction using Machine Learning**.
 
+This system helps farmers, students, and researchers **estimate cost, yield, revenue, and profit** for better agricultural planning.
 It has:
 - A **FastAPI backend** (Python) for CRUD, reports, and ML/AI endpoints
 - A **React + Vite frontend** (TypeScript) for the UI
@@ -76,3 +77,85 @@ This project folder currently contains some items that are usually **not** pushe
 
 This repo includes a root `.gitignore` to help (see `.gitignore`).
 
+# 🚀 Features
+
+### 📊 Expense Tracking
+- Track seed cost
+- Track fertilizer cost
+- Track labor cost
+- Track transport cost
+- Calculate total farming expense automatically
+
+### 🤖 ML Prediction
+- Predict crop yield
+- Predict revenue
+- Predict profit
+- Based on Tamil Nadu agriculture dataset
+- Smart AI explanation support
+
+### 📁 Farm Management
+- Manage expenses
+- Manage budgets
+- Manage fields
+- Manage users
+- Alerts system
+
+### 📑 Reports
+- Export reports as:
+  - JSON
+  - CSV
+  - Excel (XLSX)
+
+---
+
+# 🧠 Purpose of Project
+
+Farmers often struggle to:
+- track real expenses
+- estimate actual profit
+- plan next crop investment
+- analyze farming costs
+
+Smart Harvest solves this problem using **data + machine learning**.
+
+---
+
+# 🏗️ Tech Stack
+
+### Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Radix UI
+- MUI
+
+### Backend
+- FastAPI
+- Python
+- SQLAlchemy
+- Pydantic
+
+### Machine Learning
+- XGBoost
+- scikit-learn
+
+### Database
+- SQLite (default)
+- PostgreSQL (optional)
+
+---
+
+# ⚙️ Installation Guide (Windows)
+
+## 1️⃣ Setup Backend
+
+Open terminal inside project folder:
+
+```powershell
+cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+uvicorn app.main:app --reload --port 8000
