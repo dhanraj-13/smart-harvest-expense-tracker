@@ -17,11 +17,22 @@ export type StoredPrediction = {
 };
 
 export function saveLastPrediction(value: StoredPrediction): void {
-  localStorage.setItem(LAST_PREDICTION_KEY, JSON.stringify(value));
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LAST_PREDICTION_KEY, JSON.stringify(value));
+  } catch {
+    // Ignore storage failures (private mode/restricted browser policies).
+  }
 }
 
 export function getLastPrediction(): StoredPrediction | null {
-  const raw = localStorage.getItem(LAST_PREDICTION_KEY);
+  if (typeof window === "undefined") return null;
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(LAST_PREDICTION_KEY);
+  } catch {
+    return null;
+  }
   if (!raw) return null;
   try {
     return JSON.parse(raw) as StoredPrediction;

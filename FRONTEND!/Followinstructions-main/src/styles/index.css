@@ -1,3 +1,182 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+@keyframes heroBgZoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes heroTextFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-hero-background {
+  animation: heroBgZoom 22s ease-in-out infinite alternate;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.landing-hero-content {
+  animation: heroTextFadeIn 900ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-background,
+  .landing-hero-content {
+    animation: none;
+  }
+}
+
+@keyframes fadeUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes iconBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.agri-app-shell {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, #f5fbf4 0%, #e8f6eb 45%, #dcfce7 100%);
+}
+
+.agri-app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url("/farmer-bg.jpg/bg3.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.25;
+  filter: blur(2px) saturate(1.1);
+}
+
+.agri-app-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(1px);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.dark .agri-app-shell::after {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(22, 163, 74, 0.14);
+}
+
+.premium-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(20, 83, 45, 0.12);
+  background: linear-gradient(180deg, #ffffff 0%, #f9fffb 100%);
+  box-shadow: 0 10px 24px rgba(20, 83, 45, 0.08);
+  transition: all 0.3s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 18px 38px rgba(20, 83, 45, 0.16);
+}
+
+.agri-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.24);
+  transition: all 0.2s ease;
+}
+
+.agri-btn:hover {
+  filter: brightness(1.08);
+  transform: scale(1.05);
+}
+
+.agri-btn:active {
+  transform: scale(0.95);
+}
+
+.agri-btn::after {
+  content: "";
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  left: var(--ripple-x, 50%);
+  top: var(--ripple-y, 50%);
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.agri-btn:active::after {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.3);
+  transition: transform 0.35s ease, opacity 0.6s ease;
+}
+
+.nav-link-underline {
+  position: relative;
+}
+
+.nav-link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 2px;
+  width: 0;
+  background: linear-gradient(90deg, #22c55e, #eab308);
+  transition: width 0.25s ease;
+}
+
+.nav-link-underline:hover::after,
+.nav-link-underline.active::after {
+  width: 100%;
+}
+
+.fade-in-up {
+  animation: fadeUpIn 0.5s ease both;
+}
+
+.icon-hover {
+  transition: transform 0.2s ease;
+}
+
+.icon-hover:hover {
+  animation: iconBounce 0.4s ease;
+}

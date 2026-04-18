@@ -1,3 +1,5 @@
+import { apiRequest } from "./apiClient";
+
 export type PredictExpenseRequest = {
   farmer_id: string;
   district: string;
@@ -16,8 +18,10 @@ export type PredictExpenseRequest = {
   transport_cost: number;
   storage_cost: number;
   misc_cost: number;
-  selling_price_per_ton: number;
-  language: "english" | "thanglish";
+  selling_price: number;
+  price_unit: "kg" | "ton";
+  selling_price_per_ton?: number;
+  language: "english" | "tamil" | "thanglish";
 };
 
 export type CostBreakdownItem = {
@@ -40,24 +44,15 @@ export type PredictExpenseResponse = {
   crop: string;
   season: string;
   area_hectare: number;
+  selling_price: number;
+  price_unit: "kg" | "ton";
   selling_price_per_ton: number;
-  language: "english" | "thanglish";
+  language: "english" | "tamil" | "thanglish";
 };
 
-const API_BASE_URL =
-  ((import.meta as any).env?.VITE_API_BASE_URL as string | undefined)?.trim() || "http://127.0.0.1:8000";
-
 export async function predictExpense(payload: PredictExpenseRequest): Promise<PredictExpenseResponse> {
-  const response = await fetch(`${API_BASE_URL}/predict-expense/`, {
+  return apiRequest<PredictExpenseResponse>("/api/predict", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: payload,
   });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Prediction request failed (${response.status})`);
-  }
-
-  return (await response.json()) as PredictExpenseResponse;
 }

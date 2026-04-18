@@ -1,619 +1,290 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Calendar,
+  ChevronRight,
+  History,
+  Leaf,
+  LineChart,
+  Mail,
+  MapPin,
+  Phone,
   Sprout,
   TrendingUp,
-  Brain,
-  BarChart2,
-  Shield,
-  CheckCircle,
-  ChevronRight,
-  Star,
-  ArrowRight,
-  Leaf,
-  MapPin,
-  Calendar,
-  Activity,
+  IndianRupee,
+  ClipboardList,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const SH = {
-  green: "#2F6B3B",
-  deep: "#1F4D2A",
-  paddy: "#7BAE58",
-  turmeric: "#D9A441",
-  terracotta: "#B85C38",
-  soil: "#6B4F3A",
-  bg: "#F7F3EA",
-  surface: "#FFFDF8",
-  text: "#1F2933",
-  muted: "#667085",
-  border: "#D9D2C3",
-};
+const heroImageUrl = "/farmer-bg.jpg/StockCake-Sunset_Harvest_Time-534727-standard.jpg";
 
-const heroImageUrl =
-  "https://images.unsplash.com/photo-1628179148156-d9cfac053d6f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYWRkeSUyMHJpY2UlMjBmaWVsZCUyMFRhbWlsJTIwTmFkdSUyMGdyZWVufGVufDF8fHx8MTc3MzA3ODE1NXww&ixlib=rb-4.1.0&q=80&w=1080";
-
-const farmerImageUrl =
-  "https://images.unsplash.com/photo-1662815094316-917f52876324?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxJbmRpYW4lMjBmYXJtZXIlMjBhZ3JpY3VsdHVyZSUyMGZpZWxkJTIwbW9ybmluZ3xlbnwxfHx8fDE3NzMwNzgxNTV8MA&ixlib=rb-4.1.0&q=80&w=1080";
-
-const trustStats = [
-  { label: "Districts Covered", value: "38", icon: MapPin },
-  { label: "Crops Supported", value: "24+", icon: Leaf },
-  { label: "Seasons Tracked", value: "6", icon: Calendar },
-  { label: "Model Accuracy", value: "91%", icon: Activity },
-];
-
-const features = [
-  {
-    icon: TrendingUp,
-    title: "Yield Prediction",
-    desc: "ML-powered crop yield forecasting based on district, season, crop type, and area — calibrated on Tamil Nadu data.",
-    color: SH.paddy,
-  },
-  {
-    icon: BarChart2,
-    title: "Expense Prediction",
-    desc: "Accurate cost estimates across seed, fertilizer, labor, machine, water, and transport for your farming cycle.",
-    color: SH.turmeric,
-  },
-  {
-    icon: Brain,
-    title: "AI Explanation",
-    desc: "Clear, farmer-friendly explanations of predictions in English, Tamil, or Thanglish — powered by AI.",
-    color: SH.terracotta,
-  },
-  {
-    icon: Sprout,
-    title: "Farm Management",
-    desc: "Track expenses, manage budgets, monitor fields, set alerts, and generate reports — all in one place.",
-    color: SH.soil,
-  },
-];
-
-const steps = [
-  {
-    num: "01",
-    title: "Enter Crop Details",
-    desc: "Tell us your district, crop, season, area, and sowing dates. Simple fields, no jargon.",
-  },
-  {
-    num: "02",
-    title: "Add Your Expenses",
-    desc: "Enter your expected costs — seed, labor, fertilizer, and more. Or let Smart Harvest estimate for you.",
-  },
-  {
-    num: "03",
-    title: "Get Predictions",
-    desc: "Receive yield, revenue, and profit predictions with confidence scores and AI-powered explanation.",
-  },
-];
-
-const testimonials = [
-  {
-    name: "Murugan K.",
-    role: "Paddy Farmer, Thanjavur",
-    quote:
-      "Smart Harvest predicted my paddy yield within 2% of what I actually harvested. The Tamil explanation helped me understand the numbers.",
-    stars: 5,
-  },
-  {
-    name: "Kavitha Devi",
-    role: "Farm Manager, Coimbatore",
-    quote:
-      "The expense prediction saved me from over-investing in fertilizers. Budget tracking is now simple.",
-    stars: 5,
-  },
-  {
-    name: "Dr. Arumugam S.",
-    role: "Agri Advisor, Madurai",
-    quote:
-      "I use Smart Harvest to prepare pre-season reports for 12 farms. The comparison feature is excellent.",
-    stars: 5,
-  },
-];
+const statIcons = [MapPin, Leaf, Calendar, Activity];
+const featureIcons = [TrendingUp, IndianRupee, LineChart, History];
+const stepIcons = [ClipboardList, Brain, BarChart3];
 
 export function Landing() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const stats = [
+    { value: t("landing.stat1Value"), title: t("landing.stat1Title"), desc: t("landing.stat1Desc") },
+    { value: t("landing.stat2Value"), title: t("landing.stat2Title"), desc: t("landing.stat2Desc") },
+    { value: t("landing.stat3Value"), title: t("landing.stat3Title"), desc: t("landing.stat3Desc") },
+    { value: t("landing.stat4Value"), title: t("landing.stat4Title"), desc: t("landing.stat4Desc") },
+  ];
+
+  const features = [
+    { title: t("landing.feature1Title"), desc: t("landing.feature1Desc") },
+    { title: t("landing.feature2Title"), desc: t("landing.feature2Desc") },
+    { title: t("landing.feature3Title"), desc: t("landing.feature3Desc") },
+    { title: t("landing.feature4Title"), desc: t("landing.feature4Desc") },
+  ];
+
+  const steps = [
+    { title: t("landing.step1Title"), desc: t("landing.step1Desc") },
+    { title: t("landing.step2Title"), desc: t("landing.step2Desc") },
+    { title: t("landing.step3Title"), desc: t("landing.step3Desc") },
+  ];
+
+  const navLinks = [
+    { label: t("common.home"), path: "/" },
+    { label: t("common.predict"), path: "/predict" },
+    { label: t("common.dashboard"), path: "/dashboard" },
+    { label: t("common.history"), path: "/history" },
+    { label: t("common.about"), path: "/about" },
+  ];
 
   return (
-    <div style={{ fontFamily: "'Work Sans', sans-serif", backgroundColor: SH.bg }}>
-      {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0">
-          <img
-            src={heroImageUrl}
-            alt="Paddy fields"
-            className="w-full h-full object-cover"
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(135deg, rgba(31,77,42,0.92) 0%, rgba(31,77,42,0.75) 50%, rgba(31,77,42,0.4) 100%)`,
-            }}
-          />
-        </div>
+    <div className="min-h-screen bg-[#F5FBF6] text-slate-900" style={{ fontFamily: "'Work Sans', sans-serif" }}>
+      <section
+        className="relative flex min-h-screen items-center overflow-hidden bg-cover bg-center bg-no-repeat px-4 pt-32 pb-20 md:px-6"
+        style={{ backgroundImage: `url(${heroImageUrl})` }}
+      >
+        <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
 
-        {/* Decorative contour lines */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full border"
-              style={{
-                width: `${300 + i * 120}px`,
-                height: `${300 + i * 120}px`,
-                borderColor: "rgba(255,255,255,0.3)",
-                top: "50%",
-                left: "60%",
-                transform: "translate(-50%, -50%)",
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 pt-24 pb-20">
-          <div className="max-w-2xl">
-            {/* Badge */}
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
-              style={{
-                backgroundColor: "rgba(123,174,88,0.2)",
-                border: "1px solid rgba(123,174,88,0.4)",
-              }}
-            >
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: SH.paddy }}
-              />
-              <span
-                className="text-white"
-                style={{ fontSize: "13px", fontFamily: "'Work Sans', sans-serif" }}
-              >
-                ML-Powered Crop Intelligence for Tamil Nadu
-              </span>
+        <div className="landing-hero-content relative z-10 mx-auto w-full max-w-7xl">
+          <div className="max-w-3xl">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2">
+              <Sprout size={14} className="text-[#9EE2AF]" />
+              <span className="text-sm font-medium text-white">{t("landing.heroBadge")}</span>
             </div>
 
-            <h1
-              className="text-white mb-5"
-              style={{
-                fontFamily: "'Lora', serif",
-                fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                fontWeight: 700,
-                lineHeight: 1.2,
-              }}
-            >
-              Plan Smarter.
+            <h1 className="font-['Lora'] text-4xl font-bold leading-tight text-white sm:text-5xl lg:text-6xl">
+              {t("landing.heroTitle1")}
               <br />
-              <span style={{ color: SH.turmeric }}>Predict Profit.</span>
+              <span className="text-[#86EFAC]">{t("landing.heroTitle2")}</span>
               <br />
-              Farm Better.
+              {t("landing.heroTitle3")}
             </h1>
 
-            <p
-              className="mb-8 max-w-xl"
-              style={{
-                fontSize: "17px",
-                lineHeight: 1.7,
-                color: "rgba(255,255,255,0.82)",
-                fontFamily: "'Work Sans', sans-serif",
-              }}
-            >
-              Smart Harvest uses machine learning trained on Tamil Nadu agriculture data to predict your
-              crop yield, cultivation costs, revenue, and profit — before you spend a single rupee.
-            </p>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-white/90 sm:text-lg">{t("landing.heroDesc")}</p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => navigate("/predict")}
-                className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-white transition-all hover:opacity-90 active:scale-95"
-                style={{
-                  backgroundColor: SH.turmeric,
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  fontFamily: "'Work Sans', sans-serif",
-                  boxShadow: "0 4px 20px rgba(217,164,65,0.4)",
-                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-800/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#15803D]"
               >
-                <Sprout size={18} />
-                Start Prediction
+                {t("common.startPrediction")}
                 <ChevronRight size={16} />
               </button>
               <button
                 onClick={() => navigate("/about")}
-                className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-white transition-all hover:bg-white/10"
-                style={{
-                  border: "1px solid rgba(255,255,255,0.35)",
-                  fontSize: "15px",
-                  fontFamily: "'Work Sans', sans-serif",
-                }}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/20"
               >
-                Learn More
+                {t("common.learnMore")}
                 <ArrowRight size={16} />
               </button>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Trust Stats */}
-        <div
-          className="absolute bottom-0 left-0 right-0"
-          style={{ backgroundColor: "rgba(31,77,42,0.85)", backdropFilter: "blur(8px)" }}
-        >
-          <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-            {trustStats.map((stat) => (
-              <div key={stat.label} className="flex items-center gap-3">
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: "rgba(123,174,88,0.2)" }}
+      <section
+        className="px-4 py-20 md:px-6"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.22), rgba(255,255,255,0.22)), url('/farmer-bg.jpg/bg2.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-10 text-center">
+            <h2 className="font-['Lora'] text-3xl font-semibold text-[#0f2d1a]">{t("landing.statsTitle")}</h2>
+            <p className="mt-3 text-slate-600">{t("landing.statsSubtitle")}</p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {stats.map((stat, index) => {
+              const Icon = statIcons[index];
+              return (
+                <article
+                  key={index}
+                  className="rounded-2xl border border-white/60 bg-white/72 p-6 shadow-sm backdrop-blur-[2px] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
-                  <stat.icon size={18} color={SH.paddy} />
-                </div>
-                <div>
-                  <div
-                    className="text-white"
-                    style={{ fontSize: "20px", fontWeight: 700, lineHeight: 1 }}
-                  >
-                    {stat.value}
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#16A34A]/15 text-[#16A34A]">
+                    <Icon size={20} />
                   </div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
-                    {stat.label}
-                  </div>
-                </div>
-              </div>
-            ))}
+                  <p className="text-3xl font-bold text-[#166534]">{stat.value}</p>
+                  <h3 className="mt-2 text-base font-semibold text-slate-900">{stat.title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{stat.desc}</p>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 px-6" style={{ backgroundColor: SH.surface }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div
-              className="inline-block px-3 py-1 rounded-full mb-3"
-              style={{ backgroundColor: `${SH.paddy}22`, color: SH.green }}
-            >
-              <span style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>
-                PLATFORM FEATURES
-              </span>
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Lora', serif",
-                fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
-                color: SH.text,
-                fontWeight: 600,
-              }}
-            >
-              Everything a Tamil Nadu Farmer Needs
-            </h2>
-            <p style={{ color: SH.muted, fontSize: "16px", marginTop: "12px" }}>
-              From pre-season planning to post-harvest analysis — in one platform.
-            </p>
+      <section
+        className="px-4 py-20 md:px-6"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.28), rgba(255,255,255,0.28)), url('/farmer-bg.jpg/bg3.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-10 text-center">
+            <h2 className="font-['Lora'] text-3xl font-semibold text-[#0f2d1a]">{t("landing.featuresTitle")}</h2>
+            <p className="mt-3 text-slate-600">{t("landing.featuresSubtitle")}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {features.map((feat) => (
-              <div
-                key={feat.title}
-                className="p-6 rounded-2xl transition-all hover:-translate-y-1"
-                style={{
-                  backgroundColor: SH.surface,
-                  border: `1px solid ${SH.border}`,
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-                }}
-              >
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `${feat.color}18` }}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature, index) => {
+              const Icon = featureIcons[index];
+              return (
+                <article
+                  key={index}
+                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <feat.icon size={22} color={feat.color} />
-                </div>
-                <h3
-                  style={{
-                    fontFamily: "'Lora', serif",
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    color: SH.text,
-                    marginBottom: "8px",
-                  }}
-                >
-                  {feat.title}
-                </h3>
-                <p style={{ fontSize: "14px", color: SH.muted, lineHeight: 1.6 }}>
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#16A34A]/10 text-[#16A34A]">
+                    <Icon size={22} />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{feature.desc}</p>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="py-20 px-6" style={{ backgroundColor: SH.bg }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <div
-              className="inline-block px-3 py-1 rounded-full mb-3"
-              style={{ backgroundColor: `${SH.turmeric}22`, color: SH.soil }}
-            >
-              <span style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>
-                HOW IT WORKS
-              </span>
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Lora', serif",
-                fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
-                color: SH.text,
-                fontWeight: 600,
-              }}
-            >
-              Three Steps to Smarter Farming
-            </h2>
+      <section
+        className="px-4 py-20 md:px-6"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url('/farmer-bg.jpg/bg4.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="mx-auto w-full max-w-7xl">
+          <div className="mb-10 text-center">
+            <h2 className="font-['Lora'] text-3xl font-semibold text-[#0f2d1a]">{t("landing.stepsTitle")}</h2>
+            <p className="mt-3 text-slate-600">{t("landing.stepsSubtitle")}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {steps.map((step, i) => (
-              <div key={step.num} className="relative">
-                {i < steps.length - 1 && (
-                  <div
-                    className="hidden md:block absolute top-8 left-full w-full h-0.5 -translate-y-1/2 z-0"
-                    style={{ backgroundColor: SH.border, width: "calc(100% - 32px)", left: "calc(50% + 32px)" }}
-                  />
-                )}
-                <div className="relative z-10 text-center">
-                  <div
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                    style={{ backgroundColor: SH.green, boxShadow: "0 4px 16px rgba(47,107,59,0.3)" }}
-                  >
-                    <span
-                      className="text-white"
-                      style={{ fontFamily: "'Lora', serif", fontSize: "20px", fontWeight: 700 }}
-                    >
-                      {step.num}
-                    </span>
+          <div className="grid gap-5 md:grid-cols-3">
+            {steps.map((step, index) => {
+              const Icon = stepIcons[index];
+              return (
+                <article
+                  key={index}
+                  className="rounded-2xl border border-[#dcfce7] bg-[#f0fdf4] p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                >
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[#16A34A] text-white">
+                    <Icon size={18} />
                   </div>
-                  <h3
-                    style={{
-                      fontFamily: "'Lora', serif",
-                      fontSize: "17px",
-                      fontWeight: 600,
-                      color: SH.text,
-                      marginBottom: "8px",
-                    }}
-                  >
-                    {step.title}
-                  </h3>
-                  <p style={{ fontSize: "14px", color: SH.muted, lineHeight: 1.65 }}>
-                    {step.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
+                  <h3 className="text-lg font-semibold text-slate-900">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{step.desc}</p>
+                </article>
+              );
+            })}
           </div>
+        </div>
+      </section>
 
-          <div className="text-center mt-12">
+      <section className="bg-white px-4 py-20 md:px-6">
+        <div className="mx-auto w-full max-w-7xl">
+          <div>
+            <h2 className="font-['Lora'] text-3xl font-semibold text-[#0f2d1a]">{t("landing.chatTitle")}</h2>
+            <p className="mt-4 max-w-xl text-slate-600">{t("landing.chatDesc")}</p>
             <button
               onClick={() => navigate("/predict")}
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-white transition-all hover:opacity-90"
-              style={{
-                backgroundColor: SH.green,
-                fontSize: "15px",
-                fontWeight: 600,
-                fontFamily: "'Work Sans', sans-serif",
-                boxShadow: "0 4px 20px rgba(47,107,59,0.35)",
-              }}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#16A34A] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#15803D]"
             >
-              <Sprout size={18} />
-              Try Smart Harvest Free
+              {t("common.startPrediction")}
               <ChevronRight size={16} />
             </button>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 px-6" style={{ backgroundColor: SH.surface }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <div
-              className="inline-block px-3 py-1 rounded-full mb-3"
-              style={{ backgroundColor: `${SH.green}18`, color: SH.green }}
-            >
-              <span style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.05em" }}>
-                FROM FARMERS
-              </span>
+      <footer className="bg-[#0d2013] px-4 py-14 text-white md:px-6">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#16A34A] text-white">
+                <Leaf size={18} />
+              </div>
+              <p className="font-['Lora'] text-xl font-semibold">{t("common.appName")}</p>
             </div>
-            <h2
-              style={{
-                fontFamily: "'Lora', serif",
-                fontSize: "clamp(1.5rem, 3vw, 2.25rem)",
-                color: SH.text,
-                fontWeight: 600,
-              }}
-            >
-              Trusted Across Tamil Nadu
-            </h2>
+            <h4 className="mb-2 text-sm font-semibold text-green-200">{t("landing.footerAboutTitle")}</h4>
+            <p className="text-sm leading-6 text-white/75">{t("landing.footerAboutDesc")}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <div
-                key={t.name}
-                className="p-6 rounded-2xl"
-                style={{
-                  backgroundColor: SH.bg,
-                  border: `1px solid ${SH.border}`,
-                }}
-              >
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(t.stars)].map((_, i) => (
-                    <Star key={i} size={14} fill={SH.turmeric} color={SH.turmeric} />
-                  ))}
-                </div>
-                <p
-                  className="mb-5"
-                  style={{
-                    fontSize: "15px",
-                    color: SH.text,
-                    lineHeight: 1.7,
-                    fontStyle: "italic",
-                    fontFamily: "'Lora', serif",
-                  }}
-                >
-                  "{t.quote}"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-                    style={{ backgroundColor: SH.green, fontSize: "14px", fontWeight: 600 }}
-                  >
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "14px", fontWeight: 600, color: SH.text }}>
-                      {t.name}
-                    </div>
-                    <div style={{ fontSize: "12px", color: SH.muted }}>{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section
-        className="py-16 px-6"
-        style={{
-          background: `linear-gradient(135deg, ${SH.deep} 0%, ${SH.green} 100%)`,
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full border"
-              style={{
-                width: `${200 + i * 100}px`,
-                height: `${200 + i * 100}px`,
-                borderColor: "rgba(255,255,255,0.5)",
-                right: "-50px",
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            />
-          ))}
-        </div>
-        <div className="relative max-w-3xl mx-auto text-center">
-          <h2
-            className="text-white mb-4"
-            style={{
-              fontFamily: "'Lora', serif",
-              fontSize: "clamp(1.5rem, 3vw, 2.2rem)",
-              fontWeight: 700,
-            }}
-          >
-            Ready to predict your next harvest?
-          </h2>
-          <p
-            className="mb-8"
-            style={{ color: "rgba(255,255,255,0.75)", fontSize: "16px", fontFamily: "'Work Sans', sans-serif" }}
-          >
-            Join thousands of Tamil Nadu farmers making data-driven decisions.
-            <br />
-            Free to use. Powered by ML.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <button
-              onClick={() => navigate("/predict")}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-white transition-all hover:opacity-90"
-              style={{
-                backgroundColor: SH.turmeric,
-                fontSize: "15px",
-                fontWeight: 600,
-                fontFamily: "'Work Sans', sans-serif",
-                boxShadow: "0 4px 20px rgba(217,164,65,0.4)",
-              }}
-            >
-              <Sprout size={18} />
-              Start Prediction
-            </button>
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-white transition-all"
-              style={{
-                border: "1px solid rgba(255,255,255,0.3)",
-                fontSize: "15px",
-                fontFamily: "'Work Sans', sans-serif",
-              }}
-            >
-              View Dashboard
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer
-        className="px-6 py-10"
-        style={{ backgroundColor: SH.deep }}
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: SH.paddy }}
-              >
-                <Leaf size={18} color="white" />
-              </div>
-              <div>
-                <div
-                  className="text-white"
-                  style={{ fontFamily: "'Lora', serif", fontSize: "16px", fontWeight: 600 }}
-                >
-                  Smart Harvest
-                </div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)" }}>
-                  Agriculture Intelligence Platform
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
-              style={{ backgroundColor: "rgba(123,174,88,0.15)", border: "1px solid rgba(123,174,88,0.25)" }}
-            >
-              <Shield size={14} color={SH.paddy} />
-              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>
-                Predictions are advisory. Not financial guarantees. For Tamil Nadu conditions only.
-              </span>
-            </div>
-
-            <div className="flex items-center gap-5">
-              {["About", "Dashboard", "Predict", "Reports"].map((item) => (
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-green-200">{t("landing.quickLinks")}</h4>
+            <div className="space-y-2 text-sm text-white/80">
+              {navLinks.map((item) => (
                 <button
-                  key={item}
-                  className="hover:opacity-100 transition-opacity"
-                  style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}
-                  onClick={() => navigate(`/${item.toLowerCase()}`)}
+                  key={item.label}
+                  className="block transition-colors hover:text-white"
+                  onClick={() => navigate(item.path)}
                 >
-                  {item}
+                  {item.label}
                 </button>
               ))}
             </div>
           </div>
-          <div
-            className="mt-6 pt-6 text-center"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: "12px", color: "rgba(255,255,255,0.3)" }}
-          >
-            © 2025 Smart Harvest. Built for Tamil Nadu Farmers. Powered by ML & AI.
+
+          <div>
+            <h4 className="mb-3 text-sm font-semibold text-green-200">{t("landing.contact")}</h4>
+            <div className="space-y-3 text-sm text-white/80">
+              <p className="flex items-center gap-2">
+                <Mail size={15} className="text-[#86EFAC]" />
+                dhan0474@gmail.com
+              </p>
+              <p className="flex items-center gap-2">
+                <Phone size={15} className="text-[#86EFAC]" />
+                +91 6369789755
+              </p>
+              <p className="flex items-center gap-2">
+                <MapPin size={15} className="text-[#86EFAC]" />
+                Coimbatore, Tamil Nadu
+              </p>
+            </div>
           </div>
+
+          <div className="rounded-2xl border border-white/15 bg-white/5 p-5">
+            <h4 className="mb-2 text-sm font-semibold text-green-200">{t("landing.aiAdvisory")}</h4>
+            <p className="text-sm leading-6 text-white/75">
+              {t("landing.aiAdvisoryDesc")}
+            </p>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-10 w-full max-w-7xl border-t border-white/10 pt-6 text-sm text-white/60">
+          {t("landing.rights")}
         </div>
       </footer>
     </div>

@@ -1,18 +1,17 @@
-import { useState } from "react";
-import { AlertTriangle, Info, CheckCircle, Bell, X } from "lucide-react";
+﻿import { useState } from "react";
+import { AlertTriangle, Info, CheckCircle, Bell, X, Filter } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useTranslation } from "react-i18next";
 
 const SH = {
-  green: "#2F6B3B",
-  deep: "#1F4D2A",
-  paddy: "#7BAE58",
-  turmeric: "#D9A441",
-  terracotta: "#B85C38",
-  soil: "#6B4F3A",
-  bg: "#F7F3EA",
-  surface: "#FFFDF8",
-  text: "#1F2933",
-  muted: "#667085",
-  border: "#D9D2C3",
+  green: "#16A34A",
+  deep: "#14532D",
+  light: "#DCFCE7",
+  yellow: "#EAB308",
+  earth: "#A16207",
+  text: "#14532D",
+  muted: "#4F6D58",
+  border: "rgba(20, 83, 45, 0.14)",
 };
 
 type Alert = {
@@ -25,246 +24,147 @@ type Alert = {
   dismissed: boolean;
 };
 
-const initAlerts: Alert[] = [
-  {
-    id: 1,
-    level: "critical",
-    category: "Budget",
-    title: "Labour Budget Exceeded",
-    desc: "Labour expenses (₹24,000) have exceeded the planned budget of ₹20,000. Overspend: ₹4,000. Review hiring plans or reallocate budget from other categories.",
-    date: "Mar 8, 2025",
-    dismissed: false,
-  },
-  {
-    id: 2,
-    level: "warning",
-    category: "Budget",
-    title: "Fertilizer Budget at 82%",
-    desc: "You have used ₹18,500 of your ₹22,500 fertilizer budget. Only ₹4,000 remaining for the season. Plan purchases accordingly.",
-    date: "Mar 7, 2025",
-    dismissed: false,
-  },
-  {
-    id: 3,
-    level: "warning",
-    category: "Budget",
-    title: "February Expenses High",
-    desc: "February 2025 expenses (₹32,000) are close to the monthly budget ceiling of ₹35,000. Monthly usage at 91%.",
-    date: "Mar 5, 2025",
-    dismissed: false,
-  },
-  {
-    id: 4,
-    level: "info",
-    category: "Harvest",
-    title: "Harvest Window Approaching — Field A",
-    desc: "Your Paddy crop on Field A (Thanjavur, Kharif 2025) is expected to be ready for harvest in approximately 22 days. Begin preparing labour and transport arrangements.",
-    date: "Mar 5, 2025",
-    dismissed: false,
-  },
-  {
-    id: 5,
-    level: "info",
-    category: "Prediction",
-    title: "New Prediction Available",
-    desc: "Based on updated district data, a refreshed prediction model for Thanjavur Kharif Paddy is now available. Rerun your prediction for updated estimates.",
-    date: "Mar 3, 2025",
-    dismissed: false,
-  },
-  {
-    id: 6,
-    level: "success",
-    category: "Budget",
-    title: "Machine Budget On Track",
-    desc: "Machine expenses (₹11,000) are within the budget of ₹12,000. You have ₹1,000 remaining. Good spending control.",
-    date: "Mar 2, 2025",
-    dismissed: false,
-  },
-  {
-    id: 7,
-    level: "info",
-    category: "Field",
-    title: "Field C Ready for Next Season",
-    desc: "Field C (Dindigul — Groundnut) has been marked as Harvested. Consider planning your next crop for the Rabi 2025 season.",
-    date: "Feb 28, 2025",
-    dismissed: false,
-  },
+const rawInitAlerts: Alert[] = [
+  { id: 1, level: "critical", category: "Budget", title: "labourBudgetExceeded", desc: "labourBudgetExceededDesc", date: "Mar 8, 2025", dismissed: false },
+  { id: 2, level: "warning", category: "Budget", title: "fertilizerBudget82", desc: "fertilizerBudget82Desc", date: "Mar 7, 2025", dismissed: false },
+  { id: 3, level: "warning", category: "Budget", title: "febExpensesHigh", desc: "febExpensesHighDesc", date: "Mar 5, 2025", dismissed: false },
+  { id: 4, level: "info", category: "Harvest", title: "harvestWindow", desc: "harvestWindowDesc", date: "Mar 5, 2025", dismissed: false },
+  { id: 5, level: "info", category: "Prediction", title: "newPrediction", desc: "newPredictionDesc", date: "Mar 3, 2025", dismissed: false },
+  { id: 6, level: "success", category: "Budget", title: "machineBudgetOnTrack", desc: "machineBudgetOnTrackDesc", date: "Mar 2, 2025", dismissed: false },
+  { id: 7, level: "info", category: "Field", title: "fieldCReady", desc: "fieldCReadyDesc", date: "Feb 28, 2025", dismissed: false },
 ];
 
-const levelConfig = {
-  critical: {
-    icon: AlertTriangle,
-    color: SH.terracotta,
-    bg: `${SH.terracotta}12`,
-    border: `${SH.terracotta}30`,
-    label: "Critical",
-    labelBg: `${SH.terracotta}18`,
-  },
-  warning: {
-    icon: AlertTriangle,
-    color: SH.turmeric,
-    bg: `${SH.turmeric}12`,
-    border: `${SH.turmeric}30`,
-    label: "Warning",
-    labelBg: `${SH.turmeric}18`,
-  },
-  info: {
-    icon: Info,
-    color: "#5B8DB8",
-    bg: "#5B8DB812",
-    border: "#5B8DB830",
-    label: "Info",
-    labelBg: "#5B8DB818",
-  },
-  success: {
-    icon: CheckCircle,
-    color: SH.paddy,
-    bg: `${SH.paddy}12`,
-    border: `${SH.paddy}25`,
-    label: "Good",
-    labelBg: `${SH.paddy}18`,
-  },
-};
-
 const categories = ["All", "Budget", "Harvest", "Prediction", "Field"];
-const levels = ["All", "critical", "warning", "info", "success"];
 
 export function Alerts() {
-  const [alerts, setAlerts] = useState(initAlerts);
+  const { t } = useTranslation();
+
+  const levelConfig = {
+    critical: { icon: AlertTriangle, color: SH.earth, bg: `${SH.earth}12`, border: `${SH.earth}40`, label: t("pages.alerts.critical"), labelBg: `${SH.earth}20` },
+    warning: { icon: AlertTriangle, color: SH.yellow, bg: `${SH.yellow}14`, border: `${SH.yellow}45`, label: t("pages.alerts.warning"), labelBg: `${SH.yellow}25` },
+    info: { icon: Info, color: SH.green, bg: `${SH.green}12`, border: `${SH.green}35`, label: t("pages.alerts.info"), labelBg: `${SH.green}20` },
+    success: { icon: CheckCircle, color: "#22C55E", bg: "#22C55E14", border: "#22C55E35", label: t("pages.alerts.good"), labelBg: "#22C55E22" },
+  };
+
+  const [alerts, setAlerts] = useState(rawInitAlerts);
   const [catFilter, setCatFilter] = useState("All");
   const [levelFilter, setLevelFilter] = useState("All");
 
-  const filtered = alerts.filter((a) => {
-    if (a.dismissed) return false;
-    const matchCat = catFilter === "All" || a.category === catFilter;
-    const matchLevel = levelFilter === "All" || a.level === levelFilter;
+  const filtered = alerts.filter((item) => {
+    if (item.dismissed) return false;
+    const matchCat = catFilter === "All" || item.category === catFilter;
+    const matchLevel = levelFilter === "All" || item.level === levelFilter;
     return matchCat && matchLevel;
   });
 
-  const dismiss = (id: number) => {
-    setAlerts((p) => p.map((a) => a.id === id ? { ...a, dismissed: true } : a));
-  };
+  const dismiss = (id: number) => setAlerts((prev) => prev.map((item) => (item.id === id ? { ...item, dismissed: true } : item)));
 
   const counts = {
-    critical: alerts.filter((a) => !a.dismissed && a.level === "critical").length,
-    warning: alerts.filter((a) => !a.dismissed && a.level === "warning").length,
-    info: alerts.filter((a) => !a.dismissed && a.level === "info").length,
-    success: alerts.filter((a) => !a.dismissed && a.level === "success").length,
+    critical: alerts.filter((item) => !item.dismissed && item.level === "critical").length,
+    warning: alerts.filter((item) => !item.dismissed && item.level === "warning").length,
+    info: alerts.filter((item) => !item.dismissed && item.level === "info").length,
+    success: alerts.filter((item) => !item.dismissed && item.level === "success").length,
   };
 
   return (
-    <div className="min-h-full" style={{ backgroundColor: SH.bg }}>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-full px-2 py-6 md:px-0">
+      <div className="mx-auto max-w-5xl">
         <div className="mb-8">
-          <h1 style={{ fontFamily: "'Lora', serif", fontSize: "clamp(1.4rem, 3vw, 1.9rem)", fontWeight: 700, color: SH.text }}>
-            Alerts & Notifications
-          </h1>
-          <p style={{ color: SH.muted, fontSize: "14px", marginTop: "4px" }}>
-            Budget warnings, harvest reminders, and system notifications.
-          </p>
+          <h1 className="text-[clamp(1.5rem,3vw,2rem)] font-bold text-[#14532D]">{t("pages.alerts.title")}</h1>
+          <p className="mt-1 text-sm text-[#4F6D58]">{t("pages.alerts.subtitle")}</p>
         </div>
 
-        {/* Count cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          {(Object.entries(counts) as [keyof typeof counts, number][]).map(([level, count]) => {
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(Object.entries(counts) as [keyof typeof counts, number][]).map(([level, count], idx) => {
             const cfg = levelConfig[level];
             return (
-              <div
+              <motion.div
                 key={level}
-                className="p-4 rounded-2xl cursor-pointer transition-all"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
+                className="premium-card cursor-pointer p-4"
+                style={{ backgroundColor: levelFilter === level ? cfg.bg : undefined, borderColor: levelFilter === level ? cfg.border : SH.border }}
                 onClick={() => setLevelFilter(levelFilter === level ? "All" : level)}
-                style={{
-                  backgroundColor: levelFilter === level ? cfg.bg : SH.surface,
-                  border: `1.5px solid ${levelFilter === level ? cfg.color : SH.border}`,
-                }}
               >
-                <div className="flex items-center gap-2 mb-1">
-                  <cfg.icon size={15} color={cfg.color} />
-                  <span style={{ fontSize: "12px", color: cfg.color, fontWeight: 600 }}>{cfg.label}</span>
+                <div className="mb-1 flex items-center gap-2">
+                  <cfg.icon size={15} color={cfg.color} className="icon-hover" />
+                  <span className="text-xs font-semibold" style={{ color: cfg.color }}>{cfg.label}</span>
                 </div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, color: SH.text }}>{count}</div>
-              </div>
+                <div className="text-2xl font-bold text-[#14532D]">{count}</div>
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Category filter */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCatFilter(c)}
-              className="px-3 py-1.5 rounded-lg transition-all"
-              style={{
-                backgroundColor: catFilter === c ? SH.green : SH.surface,
-                color: catFilter === c ? "white" : SH.muted,
-                border: `1.5px solid ${catFilter === c ? SH.green : SH.border}`,
-                fontSize: "12px",
-                fontFamily: "'Work Sans', sans-serif",
-              }}
-            >
-              {c}
-            </button>
-          ))}
+        <div className="premium-card mb-5 p-3">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-[#14532D]">
+            <Filter size={14} /> Filter by category
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCatFilter(cat)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition-all ${
+                  catFilter === cat
+                    ? "bg-gradient-to-r from-[#16A34A] to-[#14532D] text-white"
+                    : "bg-white text-[#4F6D58] hover:scale-105 hover:bg-[#DCFCE7]"
+                }`}
+                style={{ borderColor: catFilter === cat ? "transparent" : SH.border }}
+              >
+                {t(`dynamic.categories.${cat.toLowerCase()}`)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Alert cards */}
         <div className="flex flex-col gap-3">
           {filtered.length === 0 && (
-            <div
-              className="py-20 rounded-2xl text-center"
-              style={{ backgroundColor: SH.surface, border: `1px solid ${SH.border}` }}
-            >
-              <Bell size={36} color={SH.border} className="mx-auto mb-3" />
-              <p style={{ fontSize: "15px", color: SH.muted }}>No alerts to show.</p>
+            <div className="premium-card py-20 text-center">
+              <Bell size={36} color="#86A593" className="mx-auto mb-3" />
+              <p className="text-sm text-[#4F6D58]">{t("pages.alerts.noAlerts")}</p>
             </div>
           )}
 
-          {filtered.map((alert) => {
-            const cfg = levelConfig[alert.level];
-            return (
-              <div
-                key={alert.id}
-                className="p-4 rounded-2xl"
-                style={{ backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}
-              >
-                <div className="flex items-start gap-3">
-                  <cfg.icon size={18} color={cfg.color} className="flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: SH.text }}>
-                        {alert.title}
-                      </span>
-                      <span
-                        className="px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: cfg.labelBg, color: cfg.color, fontSize: "10px", fontWeight: 600 }}
-                      >
-                        {cfg.label.toUpperCase()}
-                      </span>
-                      <span
-                        className="px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: `${SH.muted}15`, color: SH.muted, fontSize: "10px" }}
-                      >
-                        {alert.category}
-                      </span>
+          <AnimatePresence>
+            {filtered.map((alert, idx) => {
+              const cfg = levelConfig[alert.level];
+              return (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.25, delay: idx * 0.03 }}
+                  className="premium-card p-4"
+                  style={{ backgroundColor: cfg.bg, borderColor: cfg.border }}
+                >
+                  <div className="flex items-start gap-3">
+                    <cfg.icon size={18} color={cfg.color} className="mt-0.5 flex-shrink-0 icon-hover" />
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-[#14532D]">{t(`dynamic.alerts.${alert.title}`)}</span>
+                        <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: cfg.labelBg, color: cfg.color }}>
+                          {cfg.label.toUpperCase()}
+                        </span>
+                        <span className="rounded-full bg-[#14532D]/10 px-2 py-0.5 text-[10px] text-[#4F6D58]">
+                          {t(`dynamic.categories.${alert.category.toLowerCase()}`)}
+                        </span>
+                      </div>
+                      <p className="text-[13px] leading-relaxed text-[#4F6D58]">{t(`dynamic.alerts.${alert.desc}`)}</p>
+                      <div className="mt-2 text-[11px] text-[#4F6D58]">
+                        {alert.date.replace("Mar", t("dynamic.months.mar")).replace("Feb", t("dynamic.months.feb"))}
+                      </div>
                     </div>
-                    <p style={{ fontSize: "13px", color: SH.muted, lineHeight: 1.65 }}>
-                      {alert.desc}
-                    </p>
-                    <div style={{ fontSize: "11px", color: SH.muted, marginTop: "8px" }}>
-                      {alert.date}
-                    </div>
+                    <button onClick={() => dismiss(alert.id)} className="rounded-lg p-1 transition-all hover:scale-110 hover:bg-black/5">
+                      <X size={14} color={SH.muted} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => dismiss(alert.id)}
-                    className="flex-shrink-0 p-1 rounded-lg hover:bg-black/5 transition-all"
-                  >
-                    <X size={14} color={SH.muted} />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import {
   ChevronRight,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { predictExpense } from "@/app/lib/predictionApi";
 import { saveLastPrediction } from "@/app/lib/predictionStorage";
+import { useTranslation } from "react-i18next";
 
 const SH = {
   green: "#2F6B3B",
@@ -35,19 +36,21 @@ const districts = [
 ];
 const crops = ["Paddy","Sugarcane","Cotton","Groundnut","Turmeric","Banana","Maize","Ragi","Blackgram","Greengram","Sunflower","Tapioca"];
 const seasons = ["Kharif (Kuruvai)","Rabi (Samba)","Zaid (Navarai)","Annual"];
-const languages = ["English","Tamil","Thanglish"];
+const FORM_STORAGE_KEY = "formData";
+const SELLING_PRICE_UNIT_PER_KG = "per_kg";
+const SELLING_PRICE_UNIT_PER_TON = "per_ton";
 
 const expenseFields = [
-  { key: "seed", label: "Seed & Planting", icon: "🌱" },
-  { key: "fertilizer", label: "Fertilizer", icon: "🧪" },
-  { key: "pesticide", label: "Pesticide / Weedicide", icon: "💊" },
-  { key: "labor", label: "Labour", icon: "👷" },
-  { key: "machine", label: "Machine / Equipment", icon: "🚜" },
-  { key: "water", label: "Water / Irrigation", icon: "💧" },
-  { key: "fuel", label: "Fuel / Electricity", icon: "⚡" },
-  { key: "transport", label: "Transport", icon: "🚚" },
-  { key: "storage", label: "Storage", icon: "🏪" },
-  { key: "misc", label: "Miscellaneous", icon: "📦" },
+  { key: "seed", icon: "🌱" },
+  { key: "fertilizer", icon: "🧪" },
+  { key: "pesticide", icon: "💊" },
+  { key: "labor", icon: "👷" },
+  { key: "machine", icon: "🚜" },
+  { key: "water", icon: "💧" },
+  { key: "fuel", icon: "⚡" },
+  { key: "transport", icon: "🚚" },
+  { key: "storage", icon: "🏪" },
+  { key: "misc", icon: "📦" },
 ];
 
 type Step1Data = {
@@ -60,10 +63,309 @@ type Step1Data = {
   sowingDate: string;
   harvestDate: string;
   sellingPrice: string;
+  sellingPriceUnit: string;
   explainLang: string;
 };
 
 type Expenses = Record<string, string>;
+
+type VoiceExpenseField =
+  | "seed"
+  | "fertilizer"
+  | "pesticide"
+  | "labour"
+  | "machine"
+  | "water"
+  | "fuel"
+  | "transport"
+  | "storage"
+  | "other";
+
+type ParsedVoiceExpenses = Partial<Record<VoiceExpenseField, number>>;
+
+const WORD_NUMBERS: Record<string, number> = {
+  zero: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
+
+const FIELD_ALIASES: Record<string, VoiceExpenseField> = {
+  seed: "seed",
+  seeds: "seed",
+  planting: "seed",
+  fertilizer: "fertilizer",
+  fertiliser: "fertilizer",
+  manure: "fertilizer",
+  urea: "fertilizer",
+  pesticide: "pesticide",
+  pesticides: "pesticide",
+  weedicide: "pesticide",
+  spray: "pesticide",
+  labour: "labour",
+  labor: "labour",
+  worker: "labour",
+  workers: "labour",
+  coolie: "labour",
+  machine: "machine",
+  machines: "machine",
+  equipment: "machine",
+  tractor: "machine",
+  water: "water",
+  irrigation: "water",
+  fuel: "fuel",
+  diesel: "fuel",
+  electricity: "fuel",
+  current: "fuel",
+  transport: "transport",
+  lorry: "transport",
+  truck: "transport",
+  storage: "storage",
+  warehouse: "storage",
+  godown: "storage",
+  facility: "other",
+  facilities: "other",
+  other: "other",
+  others: "other",
+  miscellaneous: "other",
+  misc: "other",
+};
+
+const CONNECTOR_WORDS = new Set([
+  "cost",
+  "costs",
+  "expense",
+  "expenses",
+  "charge",
+  "charges",
+  "amount",
+  "amt",
+  "is",
+  "was",
+  "for",
+  "of",
+  "to",
+  "on",
+  "and",
+  "i",
+  "spent",
+  "spend",
+  "rupee",
+  "rupees",
+  "rs",
+  "inr",
+]);
+
+const NUMBER_WORD_TOKENS = new Set([
+  ...Object.keys(WORD_NUMBERS),
+  "hundred",
+  "thousand",
+  "and",
+]);
+
+function escapeRegexToken(token: string): string {
+  return token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeVoiceText(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/,/g, "")
+    .replace(/[^\p{L}\p{N}\s.]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseWordNumber(tokens: string[], startIndex: number): { value: number; consumed: number } | null {
+  let i = startIndex;
+  let total = 0;
+  let current = 0;
+  let consumed = 0;
+
+  while (i < tokens.length) {
+    const token = tokens[i];
+
+    if (token === "and") {
+      i += 1;
+      consumed += 1;
+      continue;
+    }
+    if (token in WORD_NUMBERS) {
+      current += WORD_NUMBERS[token];
+      i += 1;
+      consumed += 1;
+      continue;
+    }
+    if (token === "hundred") {
+      current = (current || 1) * 100;
+      i += 1;
+      consumed += 1;
+      continue;
+    }
+    if (token === "thousand") {
+      total += (current || 1) * 1000;
+      current = 0;
+      i += 1;
+      consumed += 1;
+      continue;
+    }
+    break;
+  }
+
+  const value = total + current;
+  if (consumed === 0 || value < 0) {
+    return null;
+  }
+  return { value, consumed };
+}
+
+function parseAmountAt(tokens: string[], index: number): { value: number; consumed: number } | null {
+  const numeric = tokens[index]?.match(/^\d+(?:\.\d+)?$/);
+  if (numeric) {
+    return { value: parseFloat(numeric[0]), consumed: 1 };
+  }
+  return parseWordNumber(tokens, index);
+}
+
+function findFieldKey(tokens: string[], start: number, lookAhead = 3): VoiceExpenseField | null {
+  for (let i = start; i < tokens.length && i < start + lookAhead; i += 1) {
+    const field = FIELD_ALIASES[tokens[i]];
+    if (field) return field;
+  }
+  return null;
+}
+
+function parseAmountPhrase(phrase: string): number | null {
+  const cleaned = normalizeVoiceText(phrase).replace(/\b(?:rupee|rupees|rs|inr)\b/g, " ").trim();
+  if (!cleaned) return null;
+
+  if (/^\d+(?:\.\d+)?$/.test(cleaned)) {
+    const numeric = parseFloat(cleaned);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  const tokens = cleaned.split(" ").filter(Boolean);
+  if (tokens.length === 0 || tokens.some((token) => !NUMBER_WORD_TOKENS.has(token))) {
+    return null;
+  }
+
+  const parsed = parseWordNumber(tokens, 0);
+  if (!parsed || parsed.consumed !== tokens.length) {
+    return null;
+  }
+  return parsed.value;
+}
+
+export function parseVoiceExpense(transcript: string): ParsedVoiceExpenses {
+  const text = normalizeVoiceText(transcript);
+  if (!text) return {};
+
+  const parsed: ParsedVoiceExpenses = {};
+  const fieldPattern = Object.keys(FIELD_ALIASES)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegexToken)
+    .join("|");
+  const numberWordPattern = Array.from(NUMBER_WORD_TOKENS)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegexToken)
+    .join("|");
+  const amountPattern = `(?:\\d+(?:\\.\\d+)?|(?:${numberWordPattern})(?:\\s+(?:${numberWordPattern}))*)`;
+  const connectorPattern = `(?:\\s+(?:${Array.from(CONNECTOR_WORDS)
+    .sort((a, b) => b.length - a.length)
+    .map(escapeRegexToken)
+    .join("|")}))*`;
+
+  const fieldFirstRegex = new RegExp(
+    `\\b(${fieldPattern})\\b${connectorPattern}\\s*(${amountPattern})\\b`,
+    "g"
+  );
+  const amountFirstRegex = new RegExp(
+    `\\b(${amountPattern})\\b${connectorPattern}\\s*\\b(${fieldPattern})\\b`,
+    "g"
+  );
+
+  for (const match of text.matchAll(fieldFirstRegex)) {
+    const alias = match[1]?.toLowerCase();
+    const amountText = match[2];
+    const fieldKey = alias ? FIELD_ALIASES[alias] : null;
+    const amount = amountText ? parseAmountPhrase(amountText) : null;
+    if (fieldKey && amount !== null && amount >= 0) {
+      parsed[fieldKey] = amount;
+    }
+  }
+
+  for (const match of text.matchAll(amountFirstRegex)) {
+    const amountText = match[1];
+    const alias = match[2]?.toLowerCase();
+    const fieldKey = alias ? FIELD_ALIASES[alias] : null;
+    const amount = amountText ? parseAmountPhrase(amountText) : null;
+    if (fieldKey && amount !== null && amount >= 0) {
+      parsed[fieldKey] = amount;
+    }
+  }
+
+  // Token scan fallback catches edge cases not covered by regex variations.
+  const tokens = text.split(" ").filter(Boolean);
+
+  let i = 0;
+  while (i < tokens.length) {
+    const fieldFromCurrentToken = FIELD_ALIASES[tokens[i]];
+    if (fieldFromCurrentToken) {
+      let amountStart = i + 1;
+      while (amountStart < tokens.length && CONNECTOR_WORDS.has(tokens[amountStart])) {
+        amountStart += 1;
+      }
+      const amount = parseAmountAt(tokens, amountStart);
+      if (amount && amount.value >= 0) {
+        parsed[fieldFromCurrentToken] = amount.value;
+        i = amountStart + amount.consumed;
+        continue;
+      }
+    }
+
+    const amountFromCurrentToken = parseAmountAt(tokens, i);
+    if (amountFromCurrentToken && amountFromCurrentToken.value >= 0) {
+      let fieldStart = i + amountFromCurrentToken.consumed;
+      while (fieldStart < tokens.length && CONNECTOR_WORDS.has(tokens[fieldStart])) {
+        fieldStart += 1;
+      }
+      const fieldAfterAmount = findFieldKey(tokens, fieldStart);
+      if (fieldAfterAmount) {
+        parsed[fieldAfterAmount] = amountFromCurrentToken.value;
+        i = fieldStart + 1;
+        continue;
+      }
+    }
+
+    i += 1;
+  }
+
+  return parsed;
+}
 
 const defaultStep1: Step1Data = {
   farmerId: "FMR-2025-0091",
@@ -75,6 +377,7 @@ const defaultStep1: Step1Data = {
   sowingDate: "",
   harvestDate: "",
   sellingPrice: "",
+  sellingPriceUnit: SELLING_PRICE_UNIT_PER_TON,
   explainLang: "English",
 };
 
@@ -131,11 +434,15 @@ function SelectField({
   value,
   onChange,
   options,
+  placeholder = "Select...",
+  t,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: string[];
+  placeholder?: string;
+  t: any;
 }) {
   return (
     <div>
@@ -157,12 +464,22 @@ function SelectField({
           fontFamily: "'Work Sans', sans-serif",
         }}
       >
-        <option value="">Select...</option>
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
+        <option value="">{placeholder}</option>
+        {options.map((o) => {
+          let label = o;
+          if (["Paddy","Sugarcane","Cotton","Groundnut","Turmeric","Banana","Maize","Ragi","Blackgram","Greengram","Sunflower","Tapioca"].includes(o)) {
+            label = t ? t(`dynamic.crops.${o.toLowerCase()}`) : o;
+          } else if (["Kharif (Kuruvai)","Rabi (Samba)","Zaid (Navarai)","Annual"].includes(o)) {
+            label = t ? t(`dynamic.seasons.${o.toLowerCase().replace(" ", "")}`) : o;
+          } else if (["English", "Tamil"].includes(o)) {
+             label = o === "Tamil" ? "தமிழ்" : "English";
+          }
+          return (
+            <option key={o} value={o}>
+              {label}
+            </option>
+          );
+        })}
       </select>
     </div>
   );
@@ -170,11 +487,82 @@ function SelectField({
 
 export function PredictionWorkspace() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+
+  const expenseFieldViews = expenseFields.map((f) => ({
+    ...f,
+    label: t(`predict.expense.${f.key}`),
+  }));
+
   const [step, setStep] = useState(1);
-  const [step1, setStep1] = useState<Step1Data>(defaultStep1);
+  const [step1, setStep1] = useState<Step1Data>({
+    ...defaultStep1,
+    explainLang: i18n.language === "ta" ? "Tamil" : "English",
+  });
   const [expenses, setExpenses] = useState<Expenses>(defaultExpenses);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    try {
+      const savedRaw = localStorage.getItem(FORM_STORAGE_KEY);
+      if (!savedRaw) return;
+
+      const parsed = JSON.parse(savedRaw) as {
+        step?: number;
+        step1?: Partial<Step1Data>;
+        expenses?: Partial<Expenses>;
+      };
+
+      if (typeof parsed.step === "number" && parsed.step >= 1 && parsed.step <= 3) {
+        setStep(parsed.step);
+      }
+      if (parsed.step1) {
+        setStep1((prev) => ({
+          ...prev,
+          ...parsed.step1,
+          sellingPriceUnit:
+            parsed.step1?.sellingPriceUnit === SELLING_PRICE_UNIT_PER_KG
+              ? SELLING_PRICE_UNIT_PER_KG
+              : SELLING_PRICE_UNIT_PER_TON,
+        }));
+      }
+      if (parsed.expenses) {
+        setExpenses((prev) => ({ ...prev, ...parsed.expenses }));
+      }
+    } catch {
+      // Ignore malformed saved state and continue with defaults.
+    }
+  }, []);
+
+  useEffect(() => {
+    setStep1((prev) => ({
+      ...prev,
+      explainLang: i18n.language === "ta" ? "Tamil" : "English",
+    }));
+  }, [i18n.language]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        FORM_STORAGE_KEY,
+        JSON.stringify({
+          step,
+          step1,
+          expenses,
+        })
+      );
+    } catch {
+      // Ignore storage write errors in restricted browser contexts.
+    }
+  }, [step, step1, expenses]);
+
+  useEffect(() => {
+    return () => stopVoiceRecognition();
+  }, []);
 
   const totalExpense = Object.values(expenses).reduce(
     (sum, v) => sum + (parseFloat(v) || 0),
@@ -187,17 +575,102 @@ export function PredictionWorkspace() {
     setExpenses((p) => ({ ...p, [key]: val }));
 
   const normalizeSeason = (season: string) => season.split("(")[0].trim();
-  const toBackendLanguage = (lang: string): "english" | "thanglish" =>
-    lang === "English" ? "english" : "thanglish";
+  const toBackendLanguage = (lang: string): "english" | "tamil" =>
+    lang === "English" ? "english" : "tamil";
   const parseAmount = (value: string) => {
     const parsed = parseFloat(value);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+  };
+  const toPricePerTon = (price: number, unit: string) =>
+    unit === SELLING_PRICE_UNIT_PER_KG ? price * 1000 : price;
+  const toBackendPriceUnit = (unit: string): "kg" | "ton" =>
+    unit === SELLING_PRICE_UNIT_PER_KG ? "kg" : "ton";
+  const sellingPriceUnitLabel = (unit: string) =>
+    unit === SELLING_PRICE_UNIT_PER_KG ? t("predict.priceUnitPerKg") : t("predict.priceUnitPerTon");
+
+  const stopVoiceRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const startVoiceRecognition = () => {
+    const SpeechRecognitionCtor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) {
+      setVoiceStatus(t("predict.voiceUnsupported"));
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognitionRef.current = recognition;
+    recognition.lang = i18n.language === "ta" ? "ta-IN" : "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setVoiceStatus(t("predict.listening"));
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event?.results?.[0]?.[0]?.transcript ?? "";
+      const parsedData = parseVoiceExpense(transcript);
+      console.log("transcript:", transcript);
+      console.log("parsed:", parsedData);
+
+      const voiceToExpenseMap: Record<VoiceExpenseField, keyof Expenses> = {
+        seed: "seed",
+        fertilizer: "fertilizer",
+        pesticide: "pesticide",
+        labour: "labor",
+        machine: "machine",
+        water: "water",
+        fuel: "fuel",
+        transport: "transport",
+        storage: "storage",
+        other: "misc",
+      };
+
+      const keysWithValues = Object.keys(parsedData) as VoiceExpenseField[];
+      if (keysWithValues.length === 0) {
+        setVoiceStatus(t("predict.voiceNoMatch"));
+        return;
+      }
+
+      const filledLabels: string[] = [];
+      setExpenses((prev) => {
+        const next = { ...prev };
+        for (const key of keysWithValues) {
+          const expenseKey = voiceToExpenseMap[key];
+          const amount = parsedData[key];
+          if (typeof amount !== "number" || !Number.isFinite(amount)) continue;
+
+          // Update only the fields detected in voice; leave all others unchanged.
+          next[expenseKey] = amount.toString();
+          filledLabels.push(`${t(`predict.expense.${expenseKey}`)} Rs.${amount.toLocaleString("en-IN")}`);
+        }
+        return next;
+      });
+
+      setVoiceStatus(`${t("predict.voiceFilled")}: ${filledLabels.join(" | ")}`);
+    };
+    recognition.onerror = () => {
+      setVoiceStatus(t("predict.voiceNoMatch"));
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
   };
 
   const runPrediction = async () => {
     const areaValue = parseFloat(step1.area);
     if (!step1.crop || !step1.district || !step1.season || !Number.isFinite(areaValue) || areaValue <= 0) {
-      setSubmitError("Please fill Crop, District, Season, and a valid Area before running prediction.");
+      setSubmitError(t("predict.validationError"));
       return;
     }
 
@@ -205,6 +678,9 @@ export function PredictionWorkspace() {
     setSubmitError("");
     try {
       const areaHectare = step1.areaUnit === "acre" ? areaValue * 0.404686 : areaValue;
+      const sellingPrice = parseAmount(step1.sellingPrice);
+      const priceUnit = toBackendPriceUnit(step1.sellingPriceUnit);
+      const sellingPricePerTon = toPricePerTon(sellingPrice, step1.sellingPriceUnit);
       const response = await predictExpense({
         farmer_id: step1.farmerId.trim() || "FARMER-UNKNOWN",
         district: step1.district,
@@ -223,7 +699,9 @@ export function PredictionWorkspace() {
         transport_cost: parseAmount(expenses.transport),
         storage_cost: parseAmount(expenses.storage),
         misc_cost: parseAmount(expenses.misc),
-        selling_price_per_ton: parseAmount(step1.sellingPrice),
+        selling_price: Number(sellingPrice.toFixed(2)),
+        price_unit: priceUnit,
+        selling_price_per_ton: Number(sellingPricePerTon.toFixed(2)),
         language: toBackendLanguage(step1.explainLang),
       });
 
@@ -247,10 +725,10 @@ export function PredictionWorkspace() {
     }
   };
 
-  const steps = [
-    { num: 1, label: "Crop Details", icon: Sprout },
-    { num: 2, label: "Expenses", icon: DollarSign },
-    { num: 3, label: "Review & Predict", icon: CheckCircle },
+  const wizardSteps = [
+    { num: 1, label: t("predict.step1"), icon: Sprout },
+    { num: 2, label: t("predict.step2"), icon: DollarSign },
+    { num: 3, label: t("predict.step3"), icon: CheckCircle },
   ];
 
   return (
@@ -267,16 +745,16 @@ export function PredictionWorkspace() {
               marginBottom: "6px",
             }}
           >
-            New Crop Prediction
+            {t("predict.headerTitle")}
           </h1>
           <p style={{ color: SH.muted, fontSize: "14px" }}>
-            Complete these 3 steps to get your yield, cost, and profit prediction.
+            {t("predict.headerDesc")}
           </p>
         </div>
 
         {/* Step Indicator */}
         <div className="flex items-center gap-0 mb-8">
-          {steps.map((s, i) => (
+          {wizardSteps.map((s, i) => (
             <div key={s.num} className="flex items-center flex-1">
               <button
                 className="flex items-center gap-2.5 flex-shrink-0"
@@ -308,7 +786,7 @@ export function PredictionWorkspace() {
                   {s.label}
                 </span>
               </button>
-              {i < steps.length - 1 && (
+              {i < wizardSteps.length - 1 && (
                 <div
                   className="flex-1 h-0.5 mx-3"
                   style={{ backgroundColor: step > s.num ? SH.paddy : SH.border }}
@@ -334,42 +812,48 @@ export function PredictionWorkspace() {
                   color: SH.text,
                 }}
               >
-                Crop & Farm Details
+                {t("predict.cropFarmDetails")}
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <InputField
-                label="Farmer ID"
+                label={t("predict.farmerId")}
                 value={step1.farmerId}
                 onChange={(v) => updateStep1("farmerId", v)}
                 placeholder="e.g. FMR-2025-0091"
-                hint="Your registered farmer ID"
+                hint={t("predict.farmerHint")}
               />
               <SelectField
-                label="District"
+                label={t("predict.district")}
                 value={step1.district}
                 onChange={(v) => updateStep1("district", v)}
                 options={districts}
+                placeholder={t("common.select")}
+                t={t}
               />
               <SelectField
-                label="Crop Type"
+                label={t("predict.cropType")}
                 value={step1.crop}
                 onChange={(v) => updateStep1("crop", v)}
                 options={crops}
+                placeholder={t("common.select")}
+                t={t}
               />
               <SelectField
-                label="Season"
+                label={t("predict.season")}
                 value={step1.season}
                 onChange={(v) => updateStep1("season", v)}
                 options={seasons}
+                placeholder={t("common.select")}
+                t={t}
               />
               <div>
                 <label
                   className="block mb-1.5"
                   style={{ fontSize: "13px", fontWeight: 600, color: SH.text }}
                 >
-                  Area (Cultivated)
+                  {t("predict.area")}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -405,53 +889,62 @@ export function PredictionWorkspace() {
                   </select>
                 </div>
               </div>
+              <div>
+                <label
+                  className="block mb-1.5"
+                  style={{ fontSize: "13px", fontWeight: 600, color: SH.text }}
+                >
+                  {t("predict.sellingPrice")}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={step1.sellingPrice}
+                    onChange={(e) => updateStep1("sellingPrice", e.target.value)}
+                    placeholder="e.g. 22000"
+                    className="flex-1 px-3.5 py-2.5 rounded-lg outline-none"
+                    style={{
+                      border: `1.5px solid ${SH.border}`,
+                      backgroundColor: SH.surface,
+                      color: SH.text,
+                      fontSize: "14px",
+                      fontFamily: "'Work Sans', sans-serif",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = SH.green)}
+                    onBlur={(e) => (e.target.style.borderColor = SH.border)}
+                  />
+                  <select
+                    value={step1.sellingPriceUnit}
+                    onChange={(e) => updateStep1("sellingPriceUnit", e.target.value)}
+                    className="px-3 py-2.5 rounded-lg outline-none"
+                    style={{
+                      border: `1.5px solid ${SH.border}`,
+                      backgroundColor: SH.surface,
+                      color: SH.text,
+                      fontSize: "14px",
+                      fontFamily: "'Work Sans', sans-serif",
+                    }}
+                  >
+                    <option value={SELLING_PRICE_UNIT_PER_KG}>{t("predict.priceUnitPerKg")}</option>
+                    <option value={SELLING_PRICE_UNIT_PER_TON}>{t("predict.priceUnitPerTon")}</option>
+                  </select>
+                </div>
+                <p style={{ fontSize: "12px", color: SH.muted, marginTop: "4px" }}>
+                  {t("predict.sellingHint")}
+                </p>
+              </div>
               <InputField
-                label="Selling Price (per ton)"
-                type="number"
-                value={step1.sellingPrice}
-                onChange={(v) => updateStep1("sellingPrice", v)}
-                placeholder="e.g. 22000"
-                hint="Expected selling price in ₹/ton"
-              />
-              <InputField
-                label="Sowing Date"
+                label={t("predict.sowingDate")}
                 type="date"
                 value={step1.sowingDate}
                 onChange={(v) => updateStep1("sowingDate", v)}
               />
               <InputField
-                label="Expected Harvest Date"
+                label={t("predict.harvestDate")}
                 type="date"
                 value={step1.harvestDate}
                 onChange={(v) => updateStep1("harvestDate", v)}
               />
-              <div className="sm:col-span-2">
-                <label
-                  className="block mb-2"
-                  style={{ fontSize: "13px", fontWeight: 600, color: SH.text }}
-                >
-                  AI Explanation Language
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {languages.map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => updateStep1("explainLang", l)}
-                      className="px-4 py-2 rounded-lg transition-all"
-                      style={{
-                        backgroundColor:
-                          step1.explainLang === l ? SH.green : "white",
-                        color: step1.explainLang === l ? "white" : SH.muted,
-                        border: `1.5px solid ${step1.explainLang === l ? SH.green : SH.border}`,
-                        fontSize: "13px",
-                        fontFamily: "'Work Sans', sans-serif",
-                      }}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Voice input hint */}
@@ -461,7 +954,7 @@ export function PredictionWorkspace() {
             >
               <Mic size={16} color={SH.green} />
               <p style={{ fontSize: "13px", color: SH.green }}>
-                <strong>Tip:</strong> You can use voice input to log expenses quickly. Available in Step 2.
+                <strong>{t("predict.tip")}</strong> {t("predict.tipText")}
               </p>
             </div>
 
@@ -476,7 +969,7 @@ export function PredictionWorkspace() {
                   fontFamily: "'Work Sans', sans-serif",
                 }}
               >
-                Next: Expenses
+                {t("predict.nextExpenses")}
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -500,7 +993,7 @@ export function PredictionWorkspace() {
                     color: SH.text,
                   }}
                 >
-                  Expense Entry
+                  {t("predict.expenseEntry")}
                 </h2>
               </div>
               <div
@@ -508,13 +1001,21 @@ export function PredictionWorkspace() {
                 style={{ backgroundColor: `${SH.paddy}18` }}
               >
                 <span style={{ fontSize: "12px", color: SH.green, fontWeight: 600 }}>
-                  Leave blank to use ML estimates
+                  {t("predict.leaveBlank")}
                 </span>
               </div>
             </div>
 
             {/* Voice widget */}
-            <div
+            <button
+              type="button"
+              onClick={() => {
+                if (isListening) {
+                  stopVoiceRecognition();
+                } else {
+                  startVoiceRecognition();
+                }
+              }}
               className="mb-6 p-4 rounded-xl flex items-center gap-3 cursor-pointer transition-all hover:opacity-80"
               style={{
                 backgroundColor: SH.deep,
@@ -529,22 +1030,27 @@ export function PredictionWorkspace() {
               </div>
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 600, color: "white" }}>
-                  Voice Expense Entry
+                  {t("predict.voiceEntry")}
                 </div>
                 <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
-                  Say "Fertilizer 4500 rupees" to auto-fill — works in Tamil too
+                  {t("predict.voiceHint")}
                 </div>
               </div>
               <div
                 className="ml-auto px-3 py-1 rounded-lg text-white"
                 style={{ backgroundColor: "rgba(255,255,255,0.1)", fontSize: "12px" }}
               >
-                Tap to speak
+                {isListening ? t("predict.stopListening") : t("predict.tapToSpeak")}
               </div>
-            </div>
+            </button>
+            {voiceStatus && (
+              <p className="mb-4" style={{ fontSize: "12px", color: SH.muted }}>
+                {voiceStatus}
+              </p>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {expenseFields.map((f) => (
+              {expenseFieldViews.map((f) => (
                 <div key={f.key}>
                   <label
                     className="block mb-1.5 flex items-center gap-1.5"
@@ -557,7 +1063,7 @@ export function PredictionWorkspace() {
                     type="number"
                     value={expenses[f.key]}
                     onChange={(e) => updateExpense(f.key, e.target.value)}
-                    placeholder="Enter amount in ₹"
+                    placeholder={t("predict.enterAmount")}
                     className="w-full px-3.5 py-2.5 rounded-lg outline-none"
                     style={{
                       border: `1.5px solid ${SH.border}`,
@@ -580,7 +1086,7 @@ export function PredictionWorkspace() {
             >
               <div className="flex items-center gap-2">
                 <Info size={15} color={SH.muted} />
-                <span style={{ fontSize: "13px", color: SH.muted }}>Total entered expenses</span>
+                <span style={{ fontSize: "13px", color: SH.muted }}>{t("predict.totalEntered")}</span>
               </div>
               <span
                 style={{ fontSize: "18px", fontWeight: 700, color: SH.text }}
@@ -601,7 +1107,7 @@ export function PredictionWorkspace() {
                 }}
               >
                 <ChevronLeft size={16} />
-                Back
+                {t("common.back")}
               </button>
               <button
                 onClick={() => setStep(3)}
@@ -613,7 +1119,7 @@ export function PredictionWorkspace() {
                   fontFamily: "'Work Sans', sans-serif",
                 }}
               >
-                Review & Predict
+                {t("predict.reviewPredict")}
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -636,7 +1142,7 @@ export function PredictionWorkspace() {
                   color: SH.text,
                 }}
               >
-                Review & Predict
+                {t("predict.reviewPredict")}
               </h2>
             </div>
 
@@ -674,19 +1180,24 @@ export function PredictionWorkspace() {
                 style={{ backgroundColor: SH.bg, borderBottom: `1px solid ${SH.border}` }}
               >
                 <span style={{ fontSize: "13px", fontWeight: 600, color: SH.text }}>
-                  Crop Details
+                  {t("predict.cropFarmDetails")}
                 </span>
               </div>
               {[
-                ["Farmer ID", step1.farmerId],
-                ["District", step1.district],
-                ["Crop", step1.crop],
-                ["Season", step1.season],
-                ["Area", `${step1.area || "—"} ${step1.areaUnit}`],
-                ["Selling Price", step1.sellingPrice ? `₹${parseInt(step1.sellingPrice).toLocaleString("en-IN")}/ton` : "—"],
-                ["Sowing Date", step1.sowingDate || "—"],
-                ["Harvest Date", step1.harvestDate || "—"],
-                ["Explanation Language", step1.explainLang],
+                [t("predict.farmerId"), step1.farmerId],
+                [t("predict.district"), step1.district],
+                [t("predict.cropType"), step1.crop],
+                [t("predict.season"), step1.season],
+                [t("predict.area"), `${step1.area || "—"} ${step1.areaUnit}`],
+                [
+                  t("predict.sellingPrice"),
+                  step1.sellingPrice
+                    ? `₹${parseFloat(step1.sellingPrice).toLocaleString("en-IN")}/${sellingPriceUnitLabel(step1.sellingPriceUnit)}`
+                    : "—",
+                ],
+                [t("predict.sowingDate"), step1.sowingDate || "—"],
+                [t("predict.harvestDate"), step1.harvestDate || "—"],
+                [t("predict.aiLanguage"), step1.explainLang],
               ].map(([key, val]) => (
                 <div
                   key={key}
@@ -708,13 +1219,13 @@ export function PredictionWorkspace() {
                 style={{ backgroundColor: SH.bg, borderBottom: `1px solid ${SH.border}` }}
               >
                 <span style={{ fontSize: "13px", fontWeight: 600, color: SH.text }}>
-                  Expenses Entered
+                  {t("predict.expenseEntry")}
                 </span>
                 <span style={{ fontSize: "13px", fontWeight: 700, color: SH.green }}>
-                  Total: ₹{totalExpense.toLocaleString("en-IN")}
+                  {t("common.total")}: ₹{totalExpense.toLocaleString("en-IN")}
                 </span>
               </div>
-              {expenseFields.filter((f) => expenses[f.key]).map((f) => (
+              {expenseFieldViews.filter((f) => expenses[f.key]).map((f) => (
                 <div
                   key={f.key}
                   className="flex justify-between px-4 py-2.5"
@@ -728,9 +1239,9 @@ export function PredictionWorkspace() {
                   </span>
                 </div>
               ))}
-              {expenseFields.every((f) => !expenses[f.key]) && (
+              {expenseFieldViews.every((f) => !expenses[f.key]) && (
                 <div className="px-4 py-3 text-center" style={{ fontSize: "13px", color: SH.muted }}>
-                  No expenses entered — ML will estimate all costs.
+                  {t("predict.noExpenses")}
                 </div>
               )}
             </div>
@@ -741,9 +1252,7 @@ export function PredictionWorkspace() {
             >
               <Info size={15} color={SH.soil} className="flex-shrink-0 mt-0.5" />
               <p style={{ fontSize: "13px", color: SH.soil, lineHeight: 1.6 }}>
-                Our ML model will predict your <strong>yield (tons)</strong>, <strong>total cost (₹)</strong>,{" "}
-                <strong>revenue (₹)</strong>, and <strong>profit/loss (₹)</strong> with a confidence score.
-                Predictions are advisory only.
+                {t("predict.mlDisclaimer")}
               </p>
             </div>
 
@@ -759,7 +1268,7 @@ export function PredictionWorkspace() {
                 }}
               >
                 <ChevronLeft size={16} />
-                Back
+                {t("common.back")}
               </button>
               {submitError && (
                 <div className="mx-3 flex-1 self-center" style={{ fontSize: "12px", color: SH.terracotta }}>
@@ -779,7 +1288,7 @@ export function PredictionWorkspace() {
                 }}
               >
                 <Sprout size={18} />
-                {isSubmitting ? "Running..." : "Run Prediction"}
+                {isSubmitting ? t("predict.running") : t("predict.runPrediction")}
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -789,3 +1298,4 @@ export function PredictionWorkspace() {
     </div>
   );
 }
+

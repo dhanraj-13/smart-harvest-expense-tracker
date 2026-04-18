@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard,
   Sprout,
   History,
-  BarChart3,
   DollarSign,
   Wallet,
   Map,
@@ -17,187 +16,134 @@ import {
   ChevronRight,
   Leaf,
   Globe,
+  LogOut,
 } from "lucide-react";
-
-const SH = {
-  green: "#2F6B3B",
-  deep: "#1F4D2A",
-  paddy: "#7BAE58",
-  turmeric: "#D9A441",
-  terracotta: "#B85C38",
-  soil: "#6B4F3A",
-  bg: "#F7F3EA",
-  surface: "#FFFDF8",
-  text: "#1F2933",
-  muted: "#667085",
-  border: "#D9D2C3",
-};
+import { motion, AnimatePresence } from "motion/react";
+import { getCurrentUser, logout } from "@/app/lib/auth";
+import { useTranslation } from "react-i18next";
 
 const navItems = [
-  { icon: Sprout, label: "New Prediction", path: "/predict", group: "prediction" },
-  { icon: History, label: "History", path: "/history", group: "prediction" },
-  { icon: LayoutDashboard, label: "Farm Dashboard", path: "/dashboard", group: "management" },
-  { icon: DollarSign, label: "Expenses", path: "/expenses", group: "management" },
-  { icon: Wallet, label: "Budgets", path: "/budgets", group: "management" },
-  { icon: Map, label: "Fields", path: "/fields", group: "management" },
-  { icon: Users, label: "Users", path: "/users", group: "management" },
-  { icon: Bell, label: "Alerts", path: "/alerts", group: "management" },
-  { icon: FileText, label: "Reports", path: "/reports", group: "management" },
-  { icon: Info, label: "About", path: "/about", group: "other" },
-];
+  { icon: Sprout, labelKey: "nav.newPrediction", path: "/predict", group: "prediction" },
+  { icon: History, labelKey: "nav.history", path: "/history", group: "prediction" },
+  { icon: LayoutDashboard, labelKey: "nav.farmDashboard", path: "/dashboard", group: "management" },
+  { icon: DollarSign, labelKey: "nav.expenses", path: "/expenses", group: "management" },
+  { icon: Wallet, labelKey: "nav.budgets", path: "/budgets", group: "management" },
+  { icon: Map, labelKey: "nav.fields", path: "/fields", group: "management" },
+  { icon: Users, labelKey: "nav.users", path: "/users", group: "management" },
+  { icon: Bell, labelKey: "nav.alerts", path: "/alerts", group: "management" },
+  { icon: FileText, labelKey: "nav.reports", path: "/reports", group: "management" },
+  { icon: Info, labelKey: "common.about", path: "/about", group: "other" },
+] as const;
 
-const languages = ["English", "தமிழ்", "Thanglish"];
+const setRippleOrigin = (e: MouseEvent<HTMLButtonElement>) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--ripple-x", `${e.clientX - rect.left}px`);
+  e.currentTarget.style.setProperty("--ripple-y", `${e.clientY - rect.top}px`);
+};
 
 export function Root() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [lang, setLang] = useState(0);
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+
   const isLanding = location.pathname === "/";
+  const currentLang = i18n.language;
+
+  const switchLang = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+
+  const currentUser = getCurrentUser();
+  const initials = useMemo(() => {
+    const parts = currentUser.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "U";
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() || "U";
+    return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+  }, [currentUser]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   const handleNav = (path: string) => {
     navigate(path);
     setSidebarOpen(false);
   };
 
+  const SidebarMenu = ({ group }: { group: "prediction" | "management" | "other" }) =>
+    navItems
+      .filter((item) => item.group === group)
+      .map((item) => {
+        const active = location.pathname === item.path;
+        return (
+          <button
+            key={item.path}
+            onClick={() => handleNav(item.path)}
+            className={`nav-link-underline mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${
+              active ? "active bg-white/18 text-white" : "text-emerald-100/80 hover:bg-white/10"
+            }`}
+          >
+            <motion.div whileHover={{ rotate: 8, scale: 1.08 }} className="icon-hover">
+              <item.icon size={16} />
+            </motion.div>
+            <span className="text-sm font-medium">{t(item.labelKey)}</span>
+            {active && <ChevronRight size={14} className="ml-auto" />}
+          </button>
+        );
+      });
+
   const SidebarContent = () => (
-    <div className="flex flex-col h-full" style={{ backgroundColor: SH.deep }}>
-      {/* Logo */}
+    <div className="flex h-full flex-col bg-gradient-to-b from-[#14532D] via-[#166534] to-[#14532D]">
       <div
-        className="flex items-center gap-3 px-5 py-5 cursor-pointer"
+        className="flex cursor-pointer items-center gap-3 border-b border-white/10 px-5 py-5"
         onClick={() => handleNav("/")}
-        style={{ borderBottom: `1px solid rgba(255,255,255,0.1)` }}
       >
-        <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: SH.paddy }}
-        >
-          <Leaf size={20} color="white" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#EAB308] text-white shadow-lg shadow-green-900/35">
+          <Leaf size={20} />
         </div>
         <div>
-          <div
-            className="text-white"
-            style={{ fontFamily: "'Lora', serif", fontSize: "16px", fontWeight: 600 }}
-          >
-            Smart Harvest
-          </div>
-          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", fontFamily: "'Work Sans', sans-serif" }}>
-            Agriculture Intelligence
-          </div>
+          <div className="text-base font-semibold text-white">{t("common.appName")}</div>
+          <div className="text-xs text-emerald-100/65">{t("common.agriIntel")}</div>
         </div>
       </div>
 
-      {/* Nav Groups */}
-      <div className="flex-1 overflow-y-auto py-4 px-3">
-        <div className="mb-4">
-          <div
-            className="px-3 mb-2"
-            style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "'Work Sans', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase" }}
-          >
-            Prediction
+      <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="mb-5">
+          <div className="mb-2 px-3 text-[10px] uppercase tracking-[0.1em] text-emerald-100/45">
+            {t("nav.prediction")}
           </div>
-          {navItems.filter((i) => i.group === "prediction").map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNav(item.path)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all text-left"
-                style={{
-                  backgroundColor: active ? "rgba(123,174,88,0.25)" : "transparent",
-                  color: active ? SH.paddy : "rgba(255,255,255,0.72)",
-                  fontFamily: "'Work Sans', sans-serif",
-                  fontSize: "14px",
-                }}
-              >
-                <item.icon size={16} />
-                <span>{item.label}</span>
-                {active && <ChevronRight size={14} className="ml-auto" />}
-              </button>
-            );
-          })}
+          <SidebarMenu group="prediction" />
         </div>
 
-        <div className="mb-4">
-          <div
-            className="px-3 mb-2"
-            style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "'Work Sans', sans-serif", letterSpacing: "0.08em", textTransform: "uppercase" }}
-          >
-            Farm Management
+        <div className="mb-5">
+          <div className="mb-2 px-3 text-[10px] uppercase tracking-[0.1em] text-emerald-100/45">
+            {t("nav.farmManagement")}
           </div>
-          {navItems.filter((i) => i.group === "management").map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNav(item.path)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all text-left"
-                style={{
-                  backgroundColor: active ? "rgba(123,174,88,0.25)" : "transparent",
-                  color: active ? SH.paddy : "rgba(255,255,255,0.72)",
-                  fontFamily: "'Work Sans', sans-serif",
-                  fontSize: "14px",
-                }}
-              >
-                <item.icon size={16} />
-                <span>{item.label}</span>
-                {active && <ChevronRight size={14} className="ml-auto" />}
-              </button>
-            );
-          })}
+          <SidebarMenu group="management" />
         </div>
 
-        <div>
-          {navItems.filter((i) => i.group === "other").map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.path}
-                onClick={() => handleNav(item.path)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all text-left"
-                style={{
-                  backgroundColor: active ? "rgba(123,174,88,0.25)" : "transparent",
-                  color: active ? SH.paddy : "rgba(255,255,255,0.72)",
-                  fontFamily: "'Work Sans', sans-serif",
-                  fontSize: "14px",
-                }}
-              >
-                <item.icon size={16} />
-                <span>{item.label}</span>
-                {active && <ChevronRight size={14} className="ml-auto" />}
-              </button>
-            );
-          })}
-        </div>
+        <SidebarMenu group="other" />
       </div>
 
-      {/* Language Toggle */}
-      <div
-        className="px-4 py-4"
-        style={{ borderTop: `1px solid rgba(255,255,255,0.1)` }}
-      >
-        <div
-          className="mb-2 flex items-center gap-1.5"
-          style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontFamily: "'Work Sans', sans-serif" }}
-        >
+      <div className="border-t border-white/10 px-4 py-4">
+        <div className="mb-2 flex items-center gap-1.5 text-[11px] text-emerald-100/55">
           <Globe size={11} />
-          Language
+          {t("common.language")}
         </div>
-        <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.15)" }}>
-          {languages.map((l, i) => (
+        <div className="flex overflow-hidden rounded-xl border border-white/20 bg-white/10 p-1">
+          {(["en", "ta"] as const).map((lng) => (
             <button
-              key={l}
-              onClick={() => setLang(i)}
-              className="flex-1 py-1.5 transition-all"
-              style={{
-                backgroundColor: lang === i ? SH.paddy : "transparent",
-                color: lang === i ? "white" : "rgba(255,255,255,0.5)",
-                fontFamily: "'Work Sans', sans-serif",
-                fontSize: "11px",
-                borderRight: i < languages.length - 1 ? "1px solid rgba(255,255,255,0.15)" : "none",
-              }}
+              key={lng}
+              onClick={() => switchLang(lng)}
+              className={`flex-1 rounded-lg py-1.5 text-xs transition-all ${
+                currentLang === lng
+                  ? "bg-white text-[#14532D] shadow-sm"
+                  : "text-emerald-100/70 hover:bg-white/15"
+              }`}
             >
-              {l}
+              {lng === "en" ? t("common.english") : t("common.tamil")}
             </button>
           ))}
         </div>
@@ -207,60 +153,46 @@ export function Root() {
 
   if (isLanding) {
     return (
-      <div style={{ fontFamily: "'Work Sans', sans-serif", minHeight: "100vh" }}>
-        {/* Landing top nav */}
-        <nav
-          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
-          style={{ backgroundColor: "rgba(31,77,42,0.95)", backdropFilter: "blur(8px)" }}
-        >
-          <div
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate("/")}
-          >
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: SH.paddy }}
-            >
-              <Leaf size={18} color="white" />
+      <div className="min-h-screen" style={{ fontFamily: "Inter, sans-serif" }}>
+        <nav className="glass-nav fixed inset-x-4 top-4 z-50 flex items-center justify-between rounded-2xl px-4 py-3 md:px-6">
+          <div className="flex cursor-pointer items-center gap-3" onClick={() => navigate("/")}>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#EAB308] text-white shadow-lg shadow-green-900/25">
+              <Leaf size={18} />
             </div>
-            <span
-              className="text-white"
-              style={{ fontFamily: "'Lora', serif", fontSize: "18px", fontWeight: 600 }}
-            >
-              Smart Harvest
-            </span>
+            <span className="text-lg font-semibold text-[#14532D]">{t("common.appName")}</span>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-1 rounded-lg px-1 py-1" style={{ border: "1px solid rgba(255,255,255,0.2)" }}>
-              {languages.map((l, i) => (
+
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="hidden items-center gap-3 md:flex">
+              {(["en", "ta"] as const).map((lng) => (
                 <button
-                  key={l}
-                  onClick={() => setLang(i)}
-                  className="px-3 py-1 rounded-md transition-all"
-                  style={{
-                    backgroundColor: lang === i ? SH.paddy : "transparent",
-                    color: lang === i ? "white" : "rgba(255,255,255,0.6)",
-                    fontFamily: "'Work Sans', sans-serif",
-                    fontSize: "12px",
-                  }}
+                  key={lng}
+                  onClick={() => switchLang(lng)}
+                  className={`nav-link-underline px-1 py-1 text-sm font-semibold transition-colors ${
+                    currentLang === lng ? "active text-[#14532D]" : "text-[#14532D]/70"
+                  }`}
                 >
-                  {l}
+                  {lng === "en" ? t("common.english") : t("common.tamil")}
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => navigate("/about")}
-              className="hidden md:block text-white transition-opacity hover:opacity-75"
-              style={{ fontFamily: "'Work Sans', sans-serif", fontSize: "14px" }}
-            >
-              About
+            <button onClick={() => navigate("/about")} className="nav-link-underline hidden text-sm text-[#14532D] md:block">
+              {t("common.about")}
             </button>
             <button
+              onPointerDown={setRippleOrigin}
               onClick={() => navigate("/predict")}
-              className="px-4 py-2 rounded-lg text-white transition-all hover:opacity-90"
-              style={{ backgroundColor: SH.turmeric, fontFamily: "'Work Sans', sans-serif", fontSize: "14px", fontWeight: 600 }}
+              className="agri-btn px-4 py-2 text-sm font-semibold"
             >
-              Start Prediction
+              {t("common.startPrediction")}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-full border border-[#14532D]/30 bg-white/70 px-3 py-2 text-xs font-semibold text-[#14532D] transition-all hover:scale-105 hover:bg-white"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <LogOut size={14} /> {t("common.logout")}
+              </span>
             </button>
           </div>
         </nav>
@@ -269,84 +201,88 @@ export function Root() {
     );
   }
 
+  const currentNavItem = navItems.find((item) => item.path === location.pathname);
+  const breadcrumb = currentNavItem ? t(currentNavItem.labelKey) : t("common.appName");
+
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: SH.bg, fontFamily: "'Work Sans', sans-serif" }}>
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex flex-col w-60 flex-shrink-0 h-full">
+    <div className="agri-app-shell flex h-screen overflow-hidden" style={{ fontFamily: "Inter, sans-serif" }}>
+      <div className="hidden h-full w-64 flex-shrink-0 lg:flex">
         <SidebarContent />
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <div className="relative w-64 h-full z-10">
-            <SidebarContent />
-          </div>
-          <button
-            className="absolute top-4 right-4 text-white z-20"
-            onClick={() => setSidebarOpen(false)}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex lg:hidden"
           >
-            <X size={24} />
-          </button>
-        </div>
-      )}
+            <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
+            <motion.div
+              initial={{ x: -24, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -24, opacity: 0 }}
+              className="relative z-10 h-full w-64"
+            >
+              <SidebarContent />
+            </motion.div>
+            <button className="absolute right-4 top-4 z-20 text-white" onClick={() => setSidebarOpen(false)}>
+              <X size={24} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top bar */}
-        <div
-          className="flex items-center justify-between px-4 md:px-6 py-3 flex-shrink-0"
-          style={{ backgroundColor: SH.surface, borderBottom: `1px solid ${SH.border}` }}
-        >
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="glass-nav mx-3 mt-3 flex flex-shrink-0 items-center justify-between rounded-2xl px-4 py-3 md:mx-5 md:px-6">
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden p-1.5 rounded-md"
+              className="rounded-xl p-2 text-[#14532D] transition-all hover:bg-[#DCFCE7] lg:hidden"
               onClick={() => setSidebarOpen(true)}
-              style={{ color: SH.text }}
             >
               <Menu size={20} />
             </button>
-            <div style={{ fontSize: "13px", color: SH.muted, fontFamily: "'Work Sans', sans-serif" }}>
-              {navItems.find((i) => i.path === location.pathname)?.label ?? "Smart Harvest"}
-            </div>
+            <div className="text-sm font-medium text-[#14532D]/75">{breadcrumb}</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex items-center gap-1 rounded-lg px-1 py-1"
-              style={{ border: `1px solid ${SH.border}` }}
-            >
-              {languages.map((l, i) => (
+
+          <div className="flex items-center gap-2.5 md:gap-3">
+            <div className="flex items-center gap-1 rounded-full border border-[#14532D]/15 bg-white/70 p-1">
+              {(["en", "ta"] as const).map((lng) => (
                 <button
-                  key={l}
-                  onClick={() => setLang(i)}
-                  className="px-2.5 py-1 rounded-md transition-all"
-                  style={{
-                    backgroundColor: lang === i ? SH.green : "transparent",
-                    color: lang === i ? "white" : SH.muted,
-                    fontFamily: "'Work Sans', sans-serif",
-                    fontSize: "11px",
-                  }}
+                  key={lng}
+                  onClick={() => switchLang(lng)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all ${
+                    currentLang === lng
+                      ? "bg-gradient-to-r from-[#16A34A] to-[#14532D] text-white"
+                      : "text-[#14532D]/65 hover:bg-[#DCFCE7]"
+                  }`}
                 >
-                  {l}
+                  {lng === "en" ? t("common.english") : t("common.tamil")}
                 </button>
               ))}
             </div>
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white"
-              style={{ backgroundColor: SH.green, fontSize: "13px", fontWeight: 600 }}
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1 rounded-full border border-[#14532D]/20 bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#14532D] transition-all hover:scale-105 hover:bg-white"
             >
-              RK
+              <LogOut size={13} /> {t("common.logout")}
+            </button>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#16A34A] to-[#14532D] text-sm font-semibold text-white shadow-lg shadow-green-900/25">
+              {initials}
             </div>
           </div>
         </div>
 
-        {/* Page content */}
-        <div className="flex-1 overflow-y-auto">
-          <Outlet />
+        <div className="flex-1 overflow-y-auto px-3 pb-3 md:px-5 md:pb-5">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+          >
+            <Outlet />
+          </motion.div>
         </div>
       </div>
     </div>

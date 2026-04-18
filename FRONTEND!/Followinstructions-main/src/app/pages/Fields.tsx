@@ -1,18 +1,27 @@
-import { useState } from "react";
-import { Plus, MapPin, Edit2, Trash2, X } from "lucide-react";
+﻿import { useState, type MouseEvent } from "react";
+import {
+  Plus,
+  MapPin,
+  Edit2,
+  Trash2,
+  X,
+  Sprout,
+  Ruler,
+  Map,
+  LandPlot,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useTranslation } from "react-i18next";
 
 const SH = {
-  green: "#2F6B3B",
-  deep: "#1F4D2A",
-  paddy: "#7BAE58",
-  turmeric: "#D9A441",
-  terracotta: "#B85C38",
-  soil: "#6B4F3A",
-  bg: "#F7F3EA",
-  surface: "#FFFDF8",
-  text: "#1F2933",
-  muted: "#667085",
-  border: "#D9D2C3",
+  green: "#16A34A",
+  deep: "#14532D",
+  light: "#DCFCE7",
+  yellow: "#EAB308",
+  earth: "#A16207",
+  text: "#14532D",
+  muted: "#4F6D58",
+  border: "rgba(20, 83, 45, 0.14)",
 };
 
 type Field = {
@@ -38,13 +47,20 @@ const initialFields: Field[] = [
 ];
 
 const statusColor: Record<string, string> = {
-  Active: SH.paddy,
-  Fallow: SH.turmeric,
-  Harvested: SH.muted,
-  Preparing: SH.soil,
+  Active: "#22C55E",
+  Fallow: "#EAB308",
+  Harvested: "#4F6D58",
+  Preparing: "#A16207",
 };
 
-function FieldModal({ onClose, onSave, initial }: { onClose: () => void; onSave: (f: Omit<Field, "id">) => void; initial?: Field }) {
+const setRippleOrigin = (e: MouseEvent<HTMLButtonElement>) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--ripple-x", `${e.clientX - rect.left}px`);
+  e.currentTarget.style.setProperty("--ripple-y", `${e.clientY - rect.top}px`);
+};
+
+function FieldModal({ onClose, onSave, initial }: { onClose: () => void; onSave: (field: Omit<Field, "id">) => void; initial?: Field }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     crop: initial?.crop ?? "Paddy",
@@ -57,187 +73,167 @@ function FieldModal({ onClose, onSave, initial }: { onClose: () => void; onSave:
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.4)" }}>
-      <div className="w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: SH.surface, border: `1px solid ${SH.border}` }}>
-        <div className="flex items-center justify-between mb-5">
-          <h3 style={{ fontFamily: "'Lora', serif", fontSize: "16px", fontWeight: 600, color: SH.text }}>
-            {initial ? "Edit Field" : "Add Field"}
-          </h3>
-          <button onClick={onClose}><X size={18} color={SH.muted} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="premium-card w-full max-w-md p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-[#14532D]">{initial ? t("pages.fields.editField") : t("pages.fields.addField")}</h3>
+          <button onClick={onClose} className="rounded-lg p-1 transition-all hover:bg-black/5">
+            <X size={18} color={SH.muted} />
+          </button>
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: "Field Name", key: "name", placeholder: "e.g. Field A" },
-            { label: "Crop", key: "crop", placeholder: "e.g. Paddy" },
-            { label: "Season", key: "season", placeholder: "e.g. Kharif 2025" },
-            { label: "District", key: "district", placeholder: "e.g. Thanjavur" },
-            { label: "Area", key: "area", placeholder: "e.g. 1.5 acre" },
-            { label: "GPS Location", key: "gps", placeholder: "10.79°N, 79.14°E" },
-          ].map((f) => (
-            <div key={f.key} className={f.key === "gps" ? "col-span-2" : ""}>
-              <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: SH.text }}>{f.label}</label>
+            { label: t("pages.fields.fieldName"), key: "name", placeholder: "e.g. Field A" },
+            { label: t("pages.fields.crop"), key: "crop", placeholder: "e.g. Paddy" },
+            { label: t("pages.fields.season"), key: "season", placeholder: "e.g. Kharif 2025" },
+            { label: t("pages.fields.district"), key: "district", placeholder: "e.g. Thanjavur" },
+            { label: t("pages.fields.area"), key: "area", placeholder: "e.g. 1.5 acre" },
+            { label: t("pages.fields.gpsLocation"), key: "gps", placeholder: "10.79°N, 79.14°E" },
+          ].map((field) => (
+            <div key={field.key} className={field.key === "gps" ? "col-span-2" : ""}>
+              <label className="mb-1 block text-xs font-semibold text-[#14532D]">{field.label}</label>
               <input
-                value={(form as any)[f.key]}
-                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="w-full px-3 py-2 rounded-lg outline-none"
-                style={{ border: `1.5px solid ${SH.border}`, fontSize: "13px", color: SH.text, fontFamily: "'Work Sans', sans-serif", backgroundColor: "white" }}
-                onFocus={(e) => (e.target.style.borderColor = SH.green)}
-                onBlur={(e) => (e.target.style.borderColor = SH.border)}
+                value={(form as any)[field.key]}
+                onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                placeholder={field.placeholder}
+                className="w-full rounded-xl border border-[#14532D]/15 bg-white px-3 py-2 text-sm text-[#14532D] outline-none transition-all focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20"
               />
             </div>
           ))}
+
           {[
-            { label: "Soil Type", key: "soilType", opts: soilTypes },
-            { label: "Status", key: "status", opts: statusOpts },
-          ].map((f) => (
-            <div key={f.key}>
-              <label className="block mb-1" style={{ fontSize: "12px", fontWeight: 600, color: SH.text }}>{f.label}</label>
+            { label: t("pages.fields.soilType"), key: "soilType", opts: soilTypes },
+            { label: t("pages.fields.status"), key: "status", opts: statusOpts },
+          ].map((field) => (
+            <div key={field.key}>
+              <label className="mb-1 block text-xs font-semibold text-[#14532D]">{field.label}</label>
               <select
-                value={(form as any)[f.key]}
-                onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                className="w-full px-3 py-2 rounded-lg outline-none appearance-none"
-                style={{ border: `1.5px solid ${SH.border}`, fontSize: "13px", color: SH.text, backgroundColor: "white" }}
+                value={(form as any)[field.key]}
+                onChange={(e) => setForm((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                className="w-full appearance-none rounded-xl border border-[#14532D]/15 bg-white px-3 py-2 text-sm text-[#14532D] outline-none transition-all focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20"
               >
-                {f.opts.map((o) => <option key={o}>{o}</option>)}
+                {field.opts.map((option) => (
+                  <option key={option} value={option}>
+                    {field.key === "status"
+                      ? t(`dynamic.fields.${option.toLowerCase()}`)
+                      : t(`dynamic.fields.${option.charAt(0).toLowerCase() + option.slice(1).replace(" ", "")}`)}
+                  </option>
+                ))}
               </select>
             </div>
           ))}
         </div>
-        <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl" style={{ border: `1.5px solid ${SH.border}`, color: SH.muted, fontSize: "13px" }}>
-            Cancel
+
+        <div className="mt-5 flex gap-3">
+          <button onClick={onClose} className="flex-1 rounded-full border border-[#14532D]/20 bg-white py-2.5 text-sm text-[#4F6D58] transition-all hover:scale-105">
+            {t("common.cancel")}
           </button>
           <button
-            onClick={() => { if (!form.name) return; onSave(form); onClose(); }}
-            className="flex-1 py-2.5 rounded-xl text-white"
-            style={{ backgroundColor: SH.green, fontSize: "13px", fontWeight: 600 }}
+            onPointerDown={setRippleOrigin}
+            onClick={() => {
+              if (!form.name) return;
+              onSave(form);
+              onClose();
+            }}
+            className="agri-btn flex-1 py-2.5 text-sm font-semibold"
           >
-            {initial ? "Save" : "Add Field"}
+            {initial ? t("common.save") : t("pages.fields.addField")}
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
 export function Fields() {
+  const { t } = useTranslation();
   const [fields, setFields] = useState(initialFields);
   const [modal, setModal] = useState<null | "add" | Field>(null);
 
   return (
-    <div className="min-h-full" style={{ backgroundColor: SH.bg }}>
-      {modal && (
-        <FieldModal
-          onClose={() => setModal(null)}
-          onSave={(data) => {
-            if (modal === "add") {
-              setFields((p) => [...p, { ...data, id: Date.now() }]);
-            } else {
-              setFields((p) => p.map((f) => f.id === (modal as Field).id ? { ...data, id: f.id } : f));
-            }
-          }}
-          initial={modal !== "add" ? (modal as Field) : undefined}
-        />
-      )}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+    <div className="min-h-full px-2 py-6 md:px-0">
+      <AnimatePresence>
+        {modal && (
+          <FieldModal
+            onClose={() => setModal(null)}
+            onSave={(data) => {
+              if (modal === "add") {
+                setFields((prev) => [...prev, { ...data, id: Date.now() }]);
+              } else {
+                setFields((prev) => prev.map((field) => (field.id === (modal as Field).id ? { ...data, id: field.id } : field)));
+              }
+            }}
+            initial={modal !== "add" ? (modal as Field) : undefined}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 style={{ fontFamily: "'Lora', serif", fontSize: "clamp(1.4rem, 3vw, 1.9rem)", fontWeight: 700, color: SH.text }}>
-              Fields
-            </h1>
-            <p style={{ color: SH.muted, fontSize: "14px", marginTop: "4px" }}>
-              Manage your farm fields and plot information.
-            </p>
+            <h1 className="text-[clamp(1.5rem,3vw,2rem)] font-bold text-[#14532D]">{t("pages.fields.title")}</h1>
+            <p className="mt-1 text-sm text-[#4F6D58]">{t("pages.fields.subtitle")}</p>
           </div>
-          <button
-            onClick={() => setModal("add")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-white"
-            style={{ backgroundColor: SH.green, fontSize: "13px" }}
-          >
-            <Plus size={15} />
-            Add Field
+          <button onPointerDown={setRippleOrigin} onClick={() => setModal("add")} className="agri-btn inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold">
+            <Plus size={15} className="icon-hover" />
+            {t("pages.fields.addField")}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fields.map((field) => (
-            <div
-              key={field.id}
-              className="p-5 rounded-2xl"
-              style={{ backgroundColor: SH.surface, border: `1px solid ${SH.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}
-            >
-              <div className="flex items-start justify-between mb-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {fields.map((field, idx) => (
+            <motion.div key={field.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.04 }} className="premium-card p-5">
+              <div className="mb-3 flex items-start justify-between">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 style={{ fontFamily: "'Lora', serif", fontSize: "16px", fontWeight: 600, color: SH.text }}>
-                      {field.name}
+                  <div className="mb-1 flex items-center gap-2">
+                    <LandPlot size={16} color={SH.green} className="icon-hover" />
+                    <h3 className="text-base font-semibold text-[#14532D]">
+                      {field.name.includes("Field") || field.name.includes("Home") ? t(`dynamic.fields.${field.name.charAt(0).toLowerCase() + field.name.slice(1).replace(" ", "")}`) : field.name}
                     </h3>
-                    <span
-                      className="px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: `${statusColor[field.status] ?? SH.muted}20`,
-                        color: statusColor[field.status] ?? SH.muted,
-                        fontSize: "10px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {field.status.toUpperCase()}
+                    <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ backgroundColor: `${statusColor[field.status] ?? SH.muted}20`, color: statusColor[field.status] ?? SH.muted }}>
+                      {t(`dynamic.fields.${field.status.toLowerCase()}`).toUpperCase()}
                     </span>
                   </div>
-                  <div style={{ fontSize: "13px", color: SH.muted }}>{field.crop} · {field.season}</div>
+                  <div className="text-sm text-[#4F6D58]">
+                    {t(`dynamic.crops.${field.crop.toLowerCase()}`)} · {t(`dynamic.seasons.${field.season.toLowerCase().replace(" ", "")}`)}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => setModal(field)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-all"
-                  >
+                  <button onClick={() => setModal(field)} className="rounded-lg p-2 transition-all hover:scale-110 hover:bg-[#DCFCE7]">
                     <Edit2 size={15} color={SH.muted} />
                   </button>
-                  <button
-                    onClick={() => setFields((p) => p.filter((f) => f.id !== field.id))}
-                    className="p-2 rounded-lg hover:bg-red-50 transition-all"
-                  >
-                    <Trash2 size={15} color={SH.terracotta} />
+                  <button onClick={() => setFields((prev) => prev.filter((item) => item.id !== field.id))} className="rounded-lg p-2 transition-all hover:scale-110 hover:bg-amber-50">
+                    <Trash2 size={15} color={SH.earth} />
                   </button>
                 </div>
               </div>
 
-              <div
-                className="grid grid-cols-2 gap-2 p-3 rounded-xl"
-                style={{ backgroundColor: SH.bg }}
-              >
+              <div className="grid grid-cols-2 gap-3 rounded-xl bg-[#DCFCE7]/35 p-3">
                 {[
-                  { icon: "📍", label: "District", val: field.district },
-                  { icon: "📐", label: "Area", val: field.area },
-                  { icon: "🌍", label: "Soil Type", val: field.soilType },
-                  { icon: <MapPin size={12} color={SH.muted} />, label: "GPS", val: field.gps },
+                  { icon: Map, label: t("pages.fields.district"), val: field.district },
+                  { icon: Ruler, label: t("pages.fields.area"), val: field.area },
+                  { icon: Sprout, label: t("pages.fields.soilType"), val: t(`dynamic.fields.${field.soilType.charAt(0).toLowerCase() + field.soilType.slice(1).replace(" ", "")}`) },
+                  { icon: MapPin, label: t("pages.fields.gpsLocation"), val: field.gps },
                 ].map((item, i) => (
                   <div key={i}>
-                    <div style={{ fontSize: "10px", color: SH.muted, marginBottom: "2px" }}>
-                      {typeof item.icon === "string" ? item.icon : item.icon} {item.label}
+                    <div className="mb-0.5 inline-flex items-center gap-1 text-[11px] text-[#4F6D58]">
+                      <item.icon size={12} /> {item.label}
                     </div>
-                    <div style={{ fontSize: "12px", color: SH.text, fontWeight: 500 }}>{item.val}</div>
+                    <div className="text-xs font-medium text-[#14532D]">{item.val}</div>
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {fields.length === 0 && (
-          <div
-            className="py-20 rounded-2xl text-center"
-            style={{ backgroundColor: SH.surface, border: `1px solid ${SH.border}` }}
-          >
-            <div style={{ fontSize: "3rem", marginBottom: "12px" }}>🗺️</div>
-            <p style={{ fontSize: "15px", color: SH.muted }}>No fields added yet.</p>
-            <button
-              onClick={() => setModal("add")}
-              className="mt-4 px-5 py-2.5 rounded-xl text-white"
-              style={{ backgroundColor: SH.green, fontSize: "13px" }}
-            >
-              Add Your First Field
+          <div className="premium-card py-20 text-center">
+            <LandPlot size={48} color="#86A593" className="mx-auto mb-3" />
+            <p className="text-sm text-[#4F6D58]">{t("pages.fields.noFields")}</p>
+            <button onPointerDown={setRippleOrigin} onClick={() => setModal("add")} className="agri-btn mt-4 px-5 py-2.5 text-sm font-semibold">
+              {t("pages.fields.addFirstField")}
             </button>
           </div>
         )}
